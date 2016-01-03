@@ -5,6 +5,7 @@ import Text.ParserCombinators.Parsec
 
 data Expression =
   MappyMap (M.Map Expression Expression)
+  | MappyApp [Expression]
   | MappyKeyword String
   | MappyNamedValue String
   deriving (Eq, Show, Ord)
@@ -26,8 +27,14 @@ map' = MappyMap <$> between
   (char ')')
   pairs
 
+application :: Parser Expression
+application = MappyApp <$> between
+  (char '[')
+  (char ']')
+  (expression `sepEndBy1` whiteSpace)
+
 identifier :: Parser String
-identifier = many1 $ letter <|> digit <|> oneOf "_/-+<>!@#$%^&*\\;'\",.?"
+identifier = many1 $ letter <|> digit <|> oneOf "_/-+<>!@#$%^&*\\;'\",.?="
 
 keyword :: Parser Expression
 keyword = char ':' >> (MappyKeyword <$> identifier)
@@ -36,4 +43,4 @@ namedValue :: Parser Expression
 namedValue = MappyNamedValue <$> identifier
 
 expression :: Parser Expression
-expression = map' <|> keyword <|> namedValue
+expression = map' <|> application <|> keyword <|> namedValue

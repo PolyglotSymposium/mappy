@@ -10,21 +10,27 @@ import Test.QuickCheck
 import Mappy
 
 data ArbitraryValidKeywordName =
-  ValidKeywordName String
+  ValidIdentifier String
   deriving (Show)
 
 instance Arbitrary ArbitraryValidKeywordName where
   arbitrary = do
-    let validChars = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "_/-+<>!@#$%^&*\\;'\",.?"
+    let validChars = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "_/-+<>!@#$%^&*\\;'\",.?="
     text <- arbitrary
     firstChar <- elements validChars
     let filtered = filter (`elem` validChars) text
-    return $ ValidKeywordName (firstChar:filtered)
+    return $ ValidIdentifier (firstChar:filtered)
 
 spec :: Spec
 spec = do
   describe "the text for the expression" $ do
     let parseExpression = parse expression ""
+
+    describe "when parsing function applications" $ do
+      describe "a single keyword application" $ do
+        it "parses correctly" $ do
+          property $ \(ValidIdentifier text) ->
+            parseExpression ("[" ++ text ++ "]") `shouldBe` Right (MappyApp [MappyNamedValue text])
 
     describe "when parsing maps" $ do
       describe "the empty map" $ do
@@ -46,11 +52,11 @@ spec = do
 
     describe "a single keyword" $ do
       it "parses correctly" $ do
-        property $ \(ValidKeywordName text) -> parseExpression (':':text) `shouldBe` Right (MappyKeyword text)
+        property $ \(ValidIdentifier text) -> parseExpression (':':text) `shouldBe` Right (MappyKeyword text)
 
     describe "a single named value" $ do
       it "parses correctly" $ do
-        property $ \(ValidKeywordName text) -> parseExpression text `shouldBe` Right (MappyNamedValue text)
+        property $ \(ValidIdentifier text) -> parseExpression text `shouldBe` Right (MappyNamedValue text)
 
     describe "when parsing various empty values" $ do
       describe "the \"empty keyword\"" $ do
