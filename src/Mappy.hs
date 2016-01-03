@@ -15,6 +15,9 @@ data Expression =
   | MappyNamedValue String
   deriving (Eq, Show, Ord)
 
+file :: Parser [Definition]
+file = definition `sepEndBy` whiteSpace
+
 expression :: Parser Expression
 expression = map' <|> application <|> lambda <|> keyword <|> namedValue
 

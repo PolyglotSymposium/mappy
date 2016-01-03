@@ -31,8 +31,29 @@ common_examples = [
     ,("a lamba function", "\\x -> x", MappyLambda [MappyNamedValue "x"] $ MappyNamedValue "x")
   ]
 
+example_src_file = "a = :a\nb = :b\n\nc = \\x -> x"
+
 spec :: Spec
 spec = do
+  describe "code files" $ do
+    let parseFile = parse file ""
+
+    describe "the empty file" $ do
+      it "parses to nothing" $ do
+        parseFile "" `shouldBe` Right []
+
+    describe "a file with a single definition" $ do
+      it "Parses that single definition" $ do
+        length <$> parseFile "id = \\x -> x\n" `shouldBe` Right 1
+
+    describe "a file with a single definition and no newline at the end" $ do
+      it "Parses that single definition" $ do
+        length <$> parseFile "id = \\x -> x" `shouldBe` Right 1
+
+    describe "a file with multiple definitions" $ do
+      it "Parses them all" $ do
+        length <$> parseFile example_src_file `shouldBe` Right 3
+
   describe "definition text" $ do
     let parseDefinition = parse definition ""
 
@@ -47,6 +68,7 @@ spec = do
   describe "expression text" $ do
     let parseExpression = parse expression ""
 
+    -- TODO: Nested lambdas
     describe "when parsing a lambda function" $ do
       describe "binding a non-name" $ do
           it "fails to parse" $ do
