@@ -1,6 +1,7 @@
 module MappySpec (main, spec) where
 
 import qualified Data.Map as M
+import Data.List (intercalate)
 import Text.ParserCombinators.Parsec (parse)
 import Data.Either (isLeft)
 
@@ -27,10 +28,19 @@ spec = do
     let parseExpression = parse expression ""
 
     describe "when parsing function applications" $ do
-      describe "a single keyword application" $ do
+      describe "a single named value application" $ do
         it "parses correctly" $ do
-          property $ \(ValidIdentifier text) ->
-            parseExpression ("[" ++ text ++ "]") `shouldBe` Right (MappyApp [MappyNamedValue text])
+          property $ \(ValidIdentifier name) ->
+            parseExpression ("[" ++ name ++ "]") `shouldBe` Right (MappyApp [MappyNamedValue name])
+
+      describe "an arbitrary length of arguments" $ do
+        it "parses correctly" $ do
+          property $ \(Positive n) (ValidIdentifier name) ->
+            let
+              nArgs = replicate n name
+              args = intercalate " " nArgs
+            in
+              parseExpression ("[" ++ name ++ " " ++ args ++ "]") `shouldBe` Right (MappyApp $ map MappyNamedValue (name:nArgs))
 
     describe "when parsing maps" $ do
       describe "the empty map" $ do
