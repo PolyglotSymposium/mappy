@@ -15,6 +15,8 @@ data Expression =
   | MappyNamedValue String
   deriving (Eq, Show, Ord)
 
+parseFile = parse file "(unknown)"
+
 file :: Parser [Definition]
 file = definition `sepEndBy` whiteSpace
 
