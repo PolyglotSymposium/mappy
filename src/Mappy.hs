@@ -3,6 +3,10 @@ module Mappy where
 import qualified Data.Map as M
 import Text.ParserCombinators.Parsec
 
+data Definition =
+  MappyDef Expression Expression
+  deriving (Eq, Show)
+
 data Expression =
   MappyMap (M.Map Expression Expression)
   | MappyApp Expression [Expression]
@@ -10,8 +14,17 @@ data Expression =
   | MappyNamedValue String
   deriving (Eq, Show, Ord)
 
-whiteSpace :: Parser String
-whiteSpace = many (oneOf " \n\r\t") <?> "whitespace"
+expression :: Parser Expression
+expression = map' <|> application <|> keyword <|> namedValue
+
+definition :: Parser Definition
+definition = do
+  name <- namedValue
+  whiteSpace
+  char '='
+  whiteSpace
+  expr <- expression
+  return $ MappyDef name expr
 
 pairs :: Parser (M.Map Expression Expression)
 pairs = do
@@ -41,5 +54,5 @@ keyword = char ':' >> (MappyKeyword <$> identifier)
 namedValue :: Parser Expression
 namedValue = MappyNamedValue <$> identifier
 
-expression :: Parser Expression
-expression = map' <|> application <|> keyword <|> namedValue
+whiteSpace :: Parser String
+whiteSpace = many (oneOf " \n\r\t") <?> "whitespace"

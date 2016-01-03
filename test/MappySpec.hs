@@ -4,13 +4,12 @@ import qualified Data.Map as M
 import Data.List (intercalate)
 import Text.ParserCombinators.Parsec (parse)
 import Data.Either (isLeft)
+import Data.Foldable
 
 import Test.Hspec
 import Test.QuickCheck
 
 import Mappy
-
-type WhiteSpace = String
 
 data ArbitraryValidKeywordName =
   ValidIdentifier String
@@ -24,8 +23,22 @@ instance Arbitrary ArbitraryValidKeywordName where
     let filtered = filter (`elem` validChars) text
     return $ ValidIdentifier (firstChar:filtered)
 
+binding_examples = [
+    ("a keyword", ":some-keyword", MappyKeyword "some-keyword")
+    ,("a map", "(:foo :bar)", MappyMap $ M.singleton (MappyKeyword "foo") (MappyKeyword "bar"))
+    ,("an application", "[foo ()]", MappyApp (MappyNamedValue "foo") [MappyMap M.empty])
+  ]
+
 spec :: Spec
 spec = do
+  describe "the text for definitions" $ do
+    let parseDefinition = parse definition ""
+
+    for_ binding_examples $ \(typee, boundValue, expected) ->
+      describe ("binding a name to " ++ typee) $ do
+        it "parses correctly" $ do
+          parseDefinition ("a = " ++ boundValue) `shouldBe` Right (MappyDef (MappyNamedValue "a") expected)
+
   describe "the text for the expression" $ do
     let parseExpression = parse expression ""
 
