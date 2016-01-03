@@ -27,6 +27,7 @@ binding_examples = [
     ("a keyword", ":some-keyword", MappyKeyword "some-keyword")
     ,("a map", "(:foo :bar)", MappyMap $ M.singleton (MappyKeyword "foo") (MappyKeyword "bar"))
     ,("an application", "[foo ()]", MappyApp (MappyNamedValue "foo") [MappyMap M.empty])
+    ,("a named value", "foo", MappyNamedValue "foo")
   ]
 
 spec :: Spec
