@@ -10,6 +10,8 @@ import Test.QuickCheck
 
 import Mappy
 
+type WhiteSpace = String
+
 data ArbitraryValidKeywordName =
   ValidIdentifier String
   deriving (Show)
@@ -28,19 +30,23 @@ spec = do
     let parseExpression = parse expression ""
 
     describe "when parsing function applications" $ do
-      describe "a single named value application" $ do
+      describe "with a single named value application" $ do
         it "parses correctly" $ do
           property $ \(ValidIdentifier name) ->
-            parseExpression ("[" ++ name ++ "]") `shouldBe` Right (MappyApp [MappyNamedValue name])
+            parseExpression ("[" ++ name ++ "]") `shouldBe` Right (MappyApp (MappyNamedValue name) [])
 
-      describe "an arbitrary length of arguments" $ do
+      describe "with an arbitrary length of arguments" $ do
         it "parses correctly" $ do
           property $ \(Positive n) (ValidIdentifier name) ->
             let
               nArgs = replicate n name
               args = intercalate " " nArgs
             in
-              parseExpression ("[" ++ name ++ " " ++ args ++ "]") `shouldBe` Right (MappyApp $ map MappyNamedValue (name:nArgs))
+              parseExpression ("[" ++ name ++ " " ++ args ++ "]") `shouldBe` Right (MappyApp (MappyNamedValue name) $ map MappyNamedValue nArgs)
+
+      describe "a map as the function" $ do
+        it "fails to parse" $ do
+          parseExpression "[()]" `shouldSatisfy` isLeft
 
     describe "when parsing maps" $ do
       describe "the empty map" $ do

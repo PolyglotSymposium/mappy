@@ -5,7 +5,7 @@ import Text.ParserCombinators.Parsec
 
 data Expression =
   MappyMap (M.Map Expression Expression)
-  | MappyApp [Expression]
+  | MappyApp Expression [Expression]
   | MappyKeyword String
   | MappyNamedValue String
   deriving (Eq, Show, Ord)
@@ -22,16 +22,15 @@ pairs = do
     toMap (k:v:rest) = M.insert k v $ toMap rest
 
 map' :: Parser Expression
-map' = MappyMap <$> between
-  (char '(')
-  (char ')')
-  pairs
+map' = MappyMap <$>
+  between (char '(') (char ')') pairs
 
 application :: Parser Expression
-application = MappyApp <$> between
-  (char '[')
-  (char ']')
-  (expression `sepEndBy1` whiteSpace)
+application = between (char '[') (char ']') $ do
+    fn <- namedValue
+    whiteSpace
+    args <- expression `sepEndBy` whiteSpace
+    return $ MappyApp fn args
 
 identifier :: Parser String
 identifier = many1 $ letter <|> digit <|> oneOf "_/-+<>!@#$%^&*\\;'\",.?="
