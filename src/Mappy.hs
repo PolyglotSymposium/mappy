@@ -10,7 +10,7 @@ data Definition =
 data Expression =
   MappyMap (M.Map Expression Expression)
   | MappyApp Expression [Expression]
-  | MappyLambda Expression Expression
+  | MappyLambda [Expression] Expression
   | MappyKeyword String
   | MappyNamedValue String
   deriving (Eq, Show, Ord)
@@ -30,14 +30,11 @@ definition = do
 lambda :: Parser Expression
 lambda = do
   char '\\'
-  -- TODO: test this...
   optional whiteSpace
-  name <- namedValue
-  whiteSpace
-  string "->"
+  names <- manyTill (namedValue <* whiteSpace) (string "->")
   whiteSpace
   expr <- expression
-  return $ MappyLambda name expr
+  return $ MappyLambda names expr
 
 pairs :: Parser (M.Map Expression Expression)
 pairs = do

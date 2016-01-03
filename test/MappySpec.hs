@@ -44,12 +44,16 @@ spec = do
   describe "expression text" $ do
     let parseExpression = parse expression ""
 
-    describe "when parsing lambda functions" $ do
+    describe "when parsing a lambda function" $ do
       -- TODO: var name must be named value
+      describe "whose lambda an first param are space separated" $ do
+        it "parses correctly" $ do
+          parseExpression "\\ x -> :foo" `shouldBe` Right (MappyLambda [MappyNamedValue "x"] (MappyKeyword "foo"))
+
       for_ common_examples $ \(typee, body, expected) ->
         describe ("whose body is " ++ typee) $ do
           it "parses correctly" $ do
-            parseExpression ("\\x -> " ++ body) `shouldBe` Right (MappyLambda (MappyNamedValue "x") expected)
+            parseExpression ("\\x -> " ++ body) `shouldBe` Right (MappyLambda [MappyNamedValue "x"] expected)
 
     describe "when parsing function applications" $ do
       describe "with a single named value application" $ do
