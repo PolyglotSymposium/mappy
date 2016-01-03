@@ -17,13 +17,13 @@ data ArbitraryValidKeywordName =
 
 instance Arbitrary ArbitraryValidKeywordName where
   arbitrary = do
-    let validChars = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "_/-+<>!@#$%^&*\\;'\",.?="
+    let validChars = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "_/-+<>!@#$%^&*;'\",.?="
     text <- arbitrary
     firstChar <- elements validChars
     let filtered = filter (`elem` validChars) text
     return $ ValidIdentifier (firstChar:filtered)
 
-binding_examples = [
+common_examples = [
     ("a keyword", ":some-keyword", MappyKeyword "some-keyword")
     ,("a map", "(:foo :bar)", MappyMap $ M.singleton (MappyKeyword "foo") (MappyKeyword "bar"))
     ,("an application", "[foo ()]", MappyApp (MappyNamedValue "foo") [MappyMap M.empty])
@@ -32,16 +32,24 @@ binding_examples = [
 
 spec :: Spec
 spec = do
-  describe "the text for definitions" $ do
+  describe "definition text" $ do
     let parseDefinition = parse definition ""
+    -- TODO: var name must be a named value
 
-    for_ binding_examples $ \(typee, boundValue, expected) ->
+    for_ common_examples $ \(typee, boundValue, expected) ->
       describe ("binding a name to " ++ typee) $ do
         it "parses correctly" $ do
           parseDefinition ("a = " ++ boundValue) `shouldBe` Right (MappyDef (MappyNamedValue "a") expected)
 
-  describe "the text for the expression" $ do
+  describe "expression text" $ do
     let parseExpression = parse expression ""
+
+    describe "when parsing lambda functions" $ do
+      -- TODO: var name must be named value
+      for_ common_examples $ \(typee, body, expected) ->
+        describe ("whose body is " ++ typee) $ do
+          it "parses correctly" $ do
+            parseExpression ("\\x -> " ++ body) `shouldBe` Right (MappyLambda (MappyNamedValue "x") expected)
 
     describe "when parsing function applications" $ do
       describe "with a single named value application" $ do

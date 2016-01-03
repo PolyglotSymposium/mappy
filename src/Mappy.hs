@@ -10,12 +10,13 @@ data Definition =
 data Expression =
   MappyMap (M.Map Expression Expression)
   | MappyApp Expression [Expression]
+  | MappyLambda Expression Expression
   | MappyKeyword String
   | MappyNamedValue String
   deriving (Eq, Show, Ord)
 
 expression :: Parser Expression
-expression = map' <|> application <|> keyword <|> namedValue
+expression = map' <|> application <|> lambda <|> keyword <|> namedValue
 
 definition :: Parser Definition
 definition = do
@@ -25,6 +26,18 @@ definition = do
   whiteSpace
   expr <- expression
   return $ MappyDef name expr
+
+lambda :: Parser Expression
+lambda = do
+  char '\\'
+  -- TODO: test this...
+  optional whiteSpace
+  name <- namedValue
+  whiteSpace
+  string "->"
+  whiteSpace
+  expr <- expression
+  return $ MappyLambda name expr
 
 pairs :: Parser (M.Map Expression Expression)
 pairs = do
@@ -46,7 +59,7 @@ application = between (char '[') (char ']') $ do
     return $ MappyApp fn args
 
 identifier :: Parser String
-identifier = many1 $ letter <|> digit <|> oneOf "_/-+<>!@#$%^&*\\;'\",.?="
+identifier = many1 $ letter <|> digit <|> oneOf "_/-+<>!@#$%^&*;'\",.?="
 
 keyword :: Parser Expression
 keyword = char ':' >> (MappyKeyword <$> identifier)
