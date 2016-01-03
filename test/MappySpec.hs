@@ -28,24 +28,30 @@ common_examples = [
     ,("a map", "(:foo :bar)", MappyMap $ M.singleton (MappyKeyword "foo") (MappyKeyword "bar"))
     ,("an application", "[foo ()]", MappyApp (MappyNamedValue "foo") [MappyMap M.empty])
     ,("a named value", "foo", MappyNamedValue "foo")
+    ,("a lamba function", "\\x -> x", MappyLambda [MappyNamedValue "x"] $ MappyNamedValue "x")
   ]
 
 spec :: Spec
 spec = do
   describe "definition text" $ do
     let parseDefinition = parse definition ""
-    -- TODO: var name must be a named value
 
     for_ common_examples $ \(typee, boundValue, expected) ->
       describe ("binding a name to " ++ typee) $ do
         it "parses correctly" $ do
           parseDefinition ("a = " ++ boundValue) `shouldBe` Right (MappyDef (MappyNamedValue "a") expected)
+    describe "binding a non-name" $ do
+        it "fails to parse" $ do
+          parseDefinition (":foo = :bar") `shouldSatisfy` isLeft
 
   describe "expression text" $ do
     let parseExpression = parse expression ""
 
     describe "when parsing a lambda function" $ do
-      -- TODO: var name must be named value
+      describe "binding a non-name" $ do
+          it "fails to parse" $ do
+            parseExpression ("\\:foo -> :bar") `shouldSatisfy` isLeft
+
       describe "whose lambda an first param are space separated" $ do
         it "parses correctly" $ do
           parseExpression "\\ x -> :foo" `shouldBe` Right (MappyLambda [MappyNamedValue "x"] (MappyKeyword "foo"))
