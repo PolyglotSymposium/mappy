@@ -10,6 +10,7 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Mappy
+import Language.Ast
 
 data ArbitraryValidKeywordName =
   ValidIdentifier String

@@ -1,19 +1,8 @@
 module Mappy where
 
+import Language.Ast
 import qualified Data.Map as M
 import Text.ParserCombinators.Parsec
-
-data Definition =
-  MappyDef Expression Expression
-  deriving (Eq, Show)
-
-data Expression =
-  MappyMap (M.Map Expression Expression)
-  | MappyApp Expression [Expression]
-  | MappyLambda [Expression] Expression
-  | MappyKeyword String
-  | MappyNamedValue String
-  deriving (Eq, Show, Ord)
 
 parseFile = parse file "(unknown)"
 

@@ -15,7 +15,10 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
+                     , src/Language
   exposed-modules:     Mappy
+                     , Language.Ast
+                     , Language.Executor
   build-depends:       base >= 4.7 && < 5, parsec -any, containers -any
   default-language:    Haskell2010
 
