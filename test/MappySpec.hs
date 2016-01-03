@@ -68,7 +68,10 @@ spec = do
   describe "expression text" $ do
     let parseExpression = parse expression ""
 
-    -- TODO: Nested lambdas
+    describe "when parsing nested lambas" $ do
+      it "parses correctly" $ do
+        parseExpression "\\x -> \\y -> x" `shouldBe` Right (MappyLambda [MappyNamedValue "x"] (MappyLambda [MappyNamedValue "y"] $ MappyNamedValue "x"))
+
     describe "when parsing a lambda function" $ do
       describe "binding a non-name" $ do
           it "fails to parse" $ do
