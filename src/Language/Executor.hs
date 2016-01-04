@@ -1,18 +1,31 @@
 module Language.Executor where
 
+import qualified Data.Set as S
+
 import Language.Ast
--- TODO: Check against repeated definitions
 
 data Error =
   MainNotFound
+  | RepeatedDefinition String
   deriving (Show, Eq)
 
 type ExecutionResult = Either [Error] Expression
 type Env = [(Expression, Expression)]
 
 exec :: [Definition] -> ExecutionResult
-exec defs = snd <$> initialEnvironment defs
-  
+exec defs = do
+  checkAgainstRepeatedDefs defs
+  snd <$> initialEnvironment defs
+
+checkAgainstRepeatedDefs :: [Definition] -> Either [Error] [Definition]
+checkAgainstRepeatedDefs defs = go (S.empty, []) defs
+  where
+  go (_, []) [] = Right defs
+  go (_, repeats) [] = Left $ map RepeatedDefinition repeats
+  go (seen, repeats) ((MappyDef (MappyNamedValue name) _):rest) = go (S.insert name seen, newRepeats seen name repeats) rest
+
+  newRepeats seen name = (++) (if S.member name seen then [name] else [])
+
 initialEnvironment :: [Definition] -> Either [Error] (Env, Expression)
 initialEnvironment = go ([], Nothing)
   where
