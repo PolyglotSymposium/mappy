@@ -1,5 +1,9 @@
 module Mappy where
 
+-- TODO: Move to language
+
+-- TODO: Only expose what's needed
+
 import Language.Ast
 import qualified Data.Map as M
 import Text.ParserCombinators.Parsec
