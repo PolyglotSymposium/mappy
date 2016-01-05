@@ -10,6 +10,11 @@ simple_def name val = MappyDef (MappyNamedValue name) (MappyKeyword val)
 spec :: Spec
 spec = do
   describe "exec" $ do
+    describe "given main is simply a keyword" $ do
+      let main = [MappyDef (MappyNamedValue "main") (MappyKeyword "foobar")]
+
+      it "evaluates to just that keyword" $ do
+        exec main `shouldBe` Right (MappyKeyword "foobar")
     describe "given a lot of repeats, including main" $ do
       let
         defs = [
