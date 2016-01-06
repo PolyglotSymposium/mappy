@@ -10,6 +10,7 @@ data Error =
   | RepeatedDefinition String
   | NameNotDefined String
   | WrongNumberOfArguments String Int Int
+  | KeyNotFound Expression
   deriving (Show, Eq)
 
 type ExecutionResult = Either [Error] Expression
@@ -30,7 +31,7 @@ apply :: Env -> Expression -> [Expression] -> Either [Error] Expression
 apply env (MappyNamedValue "take") (key:map:[]) = do
   key <- eval env key
   map <- eval env map
-  maybe (Left $ error "TODO: Better error here") Right (mapLookup key map)
+  maybe (Left [KeyNotFound key]) Right (mapLookup key map)
 apply env (MappyNamedValue "take") args = Left [WrongNumberOfArguments "take" 2 $ length args]
 
 mapLookup :: Expression -> Expression -> Maybe Expression

@@ -25,6 +25,16 @@ spec = do
         it "errors with a WrongNumberOfArguments error" $ do
           exec code `shouldBe` Left [WrongNumberOfArguments "take" 2 1]
 
+      describe "given a key that\'s not in the map" $ do
+        let
+          map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          code = [
+            def_main $ MappyApp (MappyNamedValue "take") [MappyKeyword "not", map]
+            ]
+
+        it "errors with a KeyNotFound error" $ do
+          exec code `shouldBe` Left [KeyNotFound (MappyKeyword "not")]
+
       describe "given the correct arguments" $ do
         let
           map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
