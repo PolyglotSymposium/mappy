@@ -5,16 +5,36 @@ import Test.Hspec
 import Language.Ast
 import Language.Executor
 
+import qualified Data.Map as M
+
 simple_def name val = MappyDef (MappyNamedValue name) (MappyKeyword val)
 
 spec :: Spec
 spec = do
   describe "exec" $ do
+    describe "given main simply binds to something else in the environment" $ do
+      let
+        code = [
+          simple_def "foo" "bar",
+          MappyDef (MappyNamedValue "main") (MappyNamedValue "foo")
+          ]
+
+      it "evaluates to whatever that name evaluates to when looked up" $ do
+        exec code `shouldBe` Right (MappyKeyword "bar")
+
+    describe "given main is simply a map" $ do
+      let main = [MappyDef (MappyNamedValue "main") map]
+          map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+
+      it "evaluates to just that map" $ do
+        exec main `shouldBe` Right map
+
     describe "given main is simply a keyword" $ do
       let main = [MappyDef (MappyNamedValue "main") (MappyKeyword "foobar")]
 
       it "evaluates to just that keyword" $ do
         exec main `shouldBe` Right (MappyKeyword "foobar")
+
     describe "given a lot of repeats, including main" $ do
       let
         defs = [

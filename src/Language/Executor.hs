@@ -7,6 +7,7 @@ import Language.Ast
 data Error =
   MainNotFound
   | RepeatedDefinition String
+  | NameNotDefined String
   deriving (Show, Eq)
 
 type ExecutionResult = Either [Error] Expression
@@ -15,7 +16,12 @@ type Env = [(Expression, Expression)]
 exec :: [Definition] -> ExecutionResult
 exec defs = do
   checkAgainstRepeatedDefs defs
-  snd <$> initialEnvironment defs
+  init <- initialEnvironment defs
+  uncurry eval init
+
+eval :: Env -> Expression -> Either [Error] Expression
+eval env namedValue@(MappyNamedValue name) = maybe (Left [NameNotDefined name]) Right (lookup namedValue env)
+eval _ value = Right value
 
 checkAgainstRepeatedDefs :: [Definition] -> Either [Error] [Definition]
 checkAgainstRepeatedDefs defs = go (S.empty, []) defs
