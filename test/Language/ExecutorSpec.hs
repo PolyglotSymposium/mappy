@@ -8,29 +8,52 @@ import Language.Executor
 import qualified Data.Map as M
 
 simple_def name val = MappyDef (MappyNamedValue name) (MappyKeyword val)
+def_main = MappyDef (MappyNamedValue "main")
 
 spec :: Spec
 spec = do
   describe "exec" $ do
+    describe "take" $ do
+
+      describe "given the wrong number of arguments" $ do
+        let
+          map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          code = [
+            def_main $ MappyApp (MappyNamedValue "take") [MappyKeyword "a"]
+            ]
+
+        it "errors with a WrongNumberOfArguments error" $ do
+          exec code `shouldBe` Left [WrongNumberOfArguments "take" 2 1]
+
+      describe "given the correct arguments" $ do
+        let
+          map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          code = [
+            def_main $ MappyApp (MappyNamedValue "take") [MappyKeyword "a", map]
+            ]
+
+        it "finds the key in the map" $ do
+          exec code `shouldBe` Right (MappyKeyword "b")
+
     describe "given main simply binds to something else in the environment" $ do
       let
         code = [
           simple_def "foo" "bar",
-          MappyDef (MappyNamedValue "main") (MappyNamedValue "foo")
+          def_main (MappyNamedValue "foo")
           ]
 
       it "evaluates to whatever that name evaluates to when looked up" $ do
         exec code `shouldBe` Right (MappyKeyword "bar")
 
     describe "given main is simply a map" $ do
-      let main = [MappyDef (MappyNamedValue "main") map]
+      let main = [def_main map]
           map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
 
       it "evaluates to just that map" $ do
         exec main `shouldBe` Right map
 
     describe "given main is simply a keyword" $ do
-      let main = [MappyDef (MappyNamedValue "main") (MappyKeyword "foobar")]
+      let main = [def_main (MappyKeyword "foobar")]
 
       it "evaluates to just that keyword" $ do
         exec main `shouldBe` Right (MappyKeyword "foobar")
