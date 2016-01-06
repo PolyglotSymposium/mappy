@@ -13,6 +13,9 @@ data Error =
   | KeyNotFound Expression
   deriving (Show, Eq)
 
+singleError :: a -> Either [a] b
+singleError = Left . pure
+
 type ExecutionResult = Either [Error] Expression
 type Env = [(Expression, Expression)]
 
@@ -23,20 +26,28 @@ exec defs = do
   uncurry eval init
 
 eval :: Env -> Expression -> Either [Error] Expression
-eval env namedValue@(MappyNamedValue name) = maybe (Left [NameNotDefined name]) Right (lookup namedValue env)
+eval env namedValue@(MappyNamedValue name) = maybe (singleError $ NameNotDefined name) Right (lookup namedValue env)
 eval env (MappyApp fn params) = apply env fn params
 eval _ value = Right value
 
 apply :: Env -> Expression -> [Expression] -> Either [Error] Expression
-apply env (MappyNamedValue "take") (key:map:[]) = do
+apply env (MappyNamedValue "take") (key:map:[]) =
+  take' env key map M.lookup
+apply env (MappyNamedValue "take") args =
+  singleError $ WrongNumberOfArguments "take" 2 $ length args
+apply env (MappyNamedValue "default-take") (key:map:def:[]) =
+  take' env key map (\expr -> Just . M.findWithDefault def expr)
+apply env (MappyNamedValue "default-take") args =
+  singleError $ WrongNumberOfArguments "default-take" 3 $ length args
+
+take' :: Env -> Expression -> Expression -> (Expression -> M.Map Expression Expression -> Maybe Expression) -> Either [Error] Expression
+take' env key map f = do
   key <- eval env key
   map <- eval env map
-  maybe (Left [KeyNotFound key]) Right (mapLookup key map)
-apply env (MappyNamedValue "take") args = Left [WrongNumberOfArguments "take" 2 $ length args]
-
-mapLookup :: Expression -> Expression -> Maybe Expression
-mapLookup key (MappyMap map) = M.lookup key map
-mapLookup _ _ = Nothing
+  maybe (singleError $ KeyNotFound key) Right (mapLookup f key map)
+    where
+    mapLookup f key (MappyMap map) = f key map
+    mapLookup _ _ _ = Nothing
 
 checkAgainstRepeatedDefs :: [Definition] -> Either [Error] [Definition]
 checkAgainstRepeatedDefs defs = go (S.empty, []) defs
@@ -51,6 +62,6 @@ initialEnvironment :: [Definition] -> Either [Error] (Env, Expression)
 initialEnvironment = go ([], Nothing)
   where
   go (env, Just m) [] = Right (env, m)
-  go (_, Nothing) [] = Left [MainNotFound]
+  go (_, Nothing) [] = singleError MainNotFound
   go (env, _) (MappyDef (MappyNamedValue "main") mainBody:rest) = go (env, Just mainBody) rest
   go (env, maybeMain) (MappyDef name body:rest) = go ((name, body):env, maybeMain) rest

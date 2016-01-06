@@ -13,8 +13,38 @@ def_main = MappyDef (MappyNamedValue "main")
 spec :: Spec
 spec = do
   describe "exec" $ do
-    describe "take" $ do
+    describe "default-take" $ do
+      describe "given the wrong number of arguments" $ do
+        let
+          map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          code = [
+            def_main $ MappyApp (MappyNamedValue "default-take") [MappyKeyword "a"]
+            ]
 
+        it "errors with a WrongNumberOfArguments error" $ do
+          exec code `shouldBe` Left [WrongNumberOfArguments "default-take" 3 1]
+
+      describe "given a key that\'s not in the map and a default" $ do
+        let
+          map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          code = [
+            def_main $ MappyApp (MappyNamedValue "default-take") [MappyKeyword "not", map, MappyKeyword "default"]
+            ]
+
+        it "returns the default" $ do
+          exec code `shouldBe` Right (MappyKeyword "default")
+
+      describe "given a key that\'s in the map" $ do
+        let
+          map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          code = [
+            def_main $ MappyApp (MappyNamedValue "default-take") [MappyKeyword "a", map, MappyKeyword "default"]
+            ]
+
+        it "finds the key in the map" $ do
+          exec code `shouldBe` Right (MappyKeyword "b")
+
+    describe "take" $ do
       describe "given the wrong number of arguments" $ do
         let
           map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
