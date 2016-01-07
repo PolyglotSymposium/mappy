@@ -1,5 +1,6 @@
 module Language.Executor where
 
+import Debug.Trace
 import qualified Data.Set as S
 import qualified Data.Map as M
 
@@ -27,7 +28,9 @@ exec defs = do
   uncurry eval init
 
 eval :: Env -> Expression -> Either [Error] Expression
-eval env namedValue@(MappyNamedValue name) = maybe (singleError $ NameNotDefined name) Right (lookup namedValue env)
+eval env namedValue@(MappyNamedValue name) = do
+  result <- maybe (singleError $ NameNotDefined name) Right (lookup namedValue env)
+  eval env result
 eval env (MappyApp fn params) = apply env fn params
 eval env (MappyLambda args body) = Right $ MappyClosure args body env
 eval _ value = Right value
@@ -44,7 +47,8 @@ apply env (MappyNamedValue "default-take") args =
 apply env (MappyNamedValue "give") (key:value:map:[]) = do
   key' <- eval env key
   map' <- eval env map
-  maybe (singleError $ GiveCalledOnNonMap key value map') Right (mapInsert key' value map')
+  value' <- eval env value
+  maybe (singleError $ GiveCalledOnNonMap key value' map') Right (mapInsert key' value' map')
     where
     mapInsert k v (MappyMap map) = Just $ MappyMap $ M.insert k v map
     mapInsert _ _ _ = Nothing
@@ -52,7 +56,7 @@ apply env (MappyNamedValue "give") args =
   singleError $ WrongNumberOfArguments "give" 3 $ length args
 apply env nonPrimitive args = do
   (MappyClosure params body env') <- forceToClosure env nonPrimitive
-  let env'' = zip params args
+  let env'' = zip params args ++ env'
   eval env'' body
 
 forceToClosure :: Env -> Expression -> Either [Error] Expression
@@ -63,7 +67,8 @@ take' :: Env -> Expression -> Expression -> (Expression -> M.Map Expression Expr
 take' env key map f = do
   key <- eval env key
   map <- eval env map
-  maybe (singleError $ KeyNotFound key) Right (mapLookup f key map)
+  result <- maybe (singleError $ KeyNotFound key) Right (mapLookup f key map)
+  eval env result
     where
     mapLookup f key (MappyMap map) = f key map
     mapLookup _ _ _ = Nothing
