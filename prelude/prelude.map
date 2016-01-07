@@ -1,3 +1,14 @@
 if = \cond then else -> [
   default-take [take :truthy cond] (:false else) then
 ]
+
+true = (:truthy :true)
+false = (:truthy :false)
+
+zero = ()
+
+succ = \num -> [give :pred num ()]
+
+pred = \num -> [take :pred num]
+
+main = [succ [succ zero]]
