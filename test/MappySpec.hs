@@ -92,6 +92,11 @@ spec = do
             parseExpression ("\\x -> " ++ body) `shouldBe` Right (MappyLambda [MappyNamedValue "x"] expected)
 
     describe "when parsing function applications" $ do
+      describe "with whitespace on the ends" $ do
+        it "parses correctly" $ do
+          property $ \(ValidIdentifier name) ->
+            parseExpression ("[  " ++ name ++ "  ]") `shouldBe` Right (MappyApp (MappyNamedValue name) [])
+
       describe "with a single named value application" $ do
         it "parses correctly" $ do
           property $ \(ValidIdentifier name) ->

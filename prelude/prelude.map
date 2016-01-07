@@ -1,0 +1,3 @@
+if = \cond then else -> [
+  default-take [take :truthy cond] (:false else) then
+]
