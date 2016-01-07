@@ -11,7 +11,7 @@ import Text.ParserCombinators.Parsec
 parseFile = parse file "(unknown)"
 
 file :: Parser [Definition]
-file = definition `sepEndBy` whiteSpace
+file = whiteSpace *> definition `sepEndBy` whiteSpace
 
 expression :: Parser Expression
 expression = map' <|> application <|> lambda <|> keyword <|> namedValue

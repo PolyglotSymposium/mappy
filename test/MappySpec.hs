@@ -43,6 +43,10 @@ spec = do
       it "parses to nothing" $ do
         parseFile "" `shouldBe` Right []
 
+    describe "a file beginning with whitespace, having a single definition" $ do
+      it "Parses that single definition" $ do
+        length <$> parseFile "\n\nid = \\x -> x\n" `shouldBe` Right 1
+
     describe "a file with a single definition" $ do
       it "Parses that single definition" $ do
         length <$> parseFile "id = \\x -> x\n" `shouldBe` Right 1

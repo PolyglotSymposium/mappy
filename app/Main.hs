@@ -1,6 +1,7 @@
 module Main where
 
 import Mappy
+import Language.Executor
 
 import System.Environment (getArgs)
 
@@ -10,5 +11,7 @@ main = do
   case args of
     [fileName] -> do
       contents <- readFile fileName
-      print $ parseFile contents
+      case parseFile contents of
+        Left e -> print e
+        Right decls -> print $ exec decls
     [] -> putStrLn "No file given!"
