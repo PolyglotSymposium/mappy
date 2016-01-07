@@ -11,6 +11,7 @@ data Error =
   | NameNotDefined String
   | WrongNumberOfArguments String Int Int
   | KeyNotFound Expression
+  | GiveCalledOnNonMap Expression Expression Expression
   deriving (Show, Eq)
 
 singleError :: a -> Either [a] b
@@ -39,6 +40,15 @@ apply env (MappyNamedValue "default-take") (key:map:def:[]) =
   take' env key map (\expr -> Just . M.findWithDefault def expr)
 apply env (MappyNamedValue "default-take") args =
   singleError $ WrongNumberOfArguments "default-take" 3 $ length args
+apply env (MappyNamedValue "give") (key:value:map:[]) = do
+  key' <- eval env key
+  map' <- eval env map
+  maybe (singleError $ GiveCalledOnNonMap key value map') Right (mapInsert key' value map')
+    where
+    mapInsert k v (MappyMap map) = Just $ MappyMap $ M.insert k v map
+    mapInsert _ _ _ = Nothing
+apply env (MappyNamedValue "give") args =
+  singleError $ WrongNumberOfArguments "give" 3 $ length args
 
 take' :: Env -> Expression -> Expression -> (Expression -> M.Map Expression Expression -> Maybe Expression) -> Either [Error] Expression
 take' env key map f = do

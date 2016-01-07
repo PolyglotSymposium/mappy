@@ -13,10 +13,48 @@ def_main = MappyDef (MappyNamedValue "main")
 spec :: Spec
 spec = do
   describe "exec" $ do
+    describe "give" $ do
+      describe "given the wrong number of arguments" $ do
+        let
+          code = [
+            def_main $ MappyApp (MappyNamedValue "give") [MappyKeyword "a"]
+            ]
+
+        it "errors with a WrongNumberOfArguments error" $ do
+          exec code `shouldBe` Left [WrongNumberOfArguments "give" 3 1]
+
+      describe "given a new key and value" $ do
+        let
+          map = MappyMap M.empty
+          code = [
+            def_main $ MappyApp (MappyNamedValue "give") [MappyKeyword "a", MappyKeyword "b", map]
+            ]
+
+        it "returns a map with the new key" $ do
+          exec code `shouldBe` Right (MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"))
+
+      describe "given an existing key" $ do
+        let
+          map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          code = [
+            def_main $ MappyApp (MappyNamedValue "give") [MappyKeyword "a", MappyKeyword "c", map]
+            ]
+
+        it "overwrites the old value at the key" $ do
+          exec code `shouldBe` Right (MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "c"))
+
+      describe "given a new key and a non-map" $ do
+        let
+          code = [
+            def_main $ MappyApp (MappyNamedValue "give") [MappyKeyword "a", MappyKeyword "b", MappyKeyword "c"]
+            ]
+
+        it "fails with a GiveCalledOnNonMap error" $ do
+          exec code `shouldBe` Left [GiveCalledOnNonMap (MappyKeyword "a") (MappyKeyword "b") (MappyKeyword "c")]
+
     describe "default-take" $ do
       describe "given the wrong number of arguments" $ do
         let
-          map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
           code = [
             def_main $ MappyApp (MappyNamedValue "default-take") [MappyKeyword "a"]
             ]
