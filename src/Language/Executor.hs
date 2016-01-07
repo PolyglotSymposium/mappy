@@ -29,6 +29,7 @@ exec defs = do
 eval :: Env -> Expression -> Either [Error] Expression
 eval env namedValue@(MappyNamedValue name) = maybe (singleError $ NameNotDefined name) Right (lookup namedValue env)
 eval env (MappyApp fn params) = apply env fn params
+eval env (MappyLambda args body) = Right $ MappyClosure args body env
 eval _ value = Right value
 
 apply :: Env -> Expression -> [Expression] -> Either [Error] Expression

@@ -13,6 +13,7 @@ data Expression =
   MappyMap (M.Map Expression Expression)
   | MappyApp Expression [Expression]
   | MappyLambda [Expression] Expression
+  | MappyClosure [Expression] Expression [(Expression, Expression)]
   | MappyKeyword String
   | MappyNamedValue String
   deriving (Eq, Show, Ord)

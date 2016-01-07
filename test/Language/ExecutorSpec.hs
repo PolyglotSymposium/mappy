@@ -13,6 +13,27 @@ def_main = MappyDef (MappyNamedValue "main")
 spec :: Spec
 spec = do
   describe "exec" $ do
+    describe "a lambda" $ do
+      describe "given the wrong number of arguments" $ do
+        let
+          code = [
+            simple_def "a" "b",
+            def_main $ MappyLambda [(MappyNamedValue "a"), (MappyNamedValue "b")] (MappyKeyword "x")
+            ]
+
+        it "evaluates to a closure containing the same information and the environment" $ do
+          exec code `shouldBe` Right (MappyClosure [MappyNamedValue "a", MappyNamedValue "b"] (MappyKeyword "x") [(MappyNamedValue "a", MappyKeyword "b")])
+
+      describe "given a new key and value" $ do
+        let
+          map = MappyMap M.empty
+          code = [
+            def_main $ MappyApp (MappyNamedValue "give") [MappyKeyword "a", MappyKeyword "b", map]
+            ]
+
+        it "returns a map with the new key" $ do
+          exec code `shouldBe` Right (MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"))
+
     describe "give" $ do
       describe "given the wrong number of arguments" $ do
         let
