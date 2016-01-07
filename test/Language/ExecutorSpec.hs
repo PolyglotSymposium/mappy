@@ -13,6 +13,16 @@ def_main = MappyDef (MappyNamedValue "main")
 spec :: Spec
 spec = do
   describe "exec" $ do
+    describe "the application of a lambda" $ do
+      let
+        code = [
+          MappyDef (MappyNamedValue "second") (MappyLambda [MappyNamedValue "a", MappyNamedValue "b"] (MappyNamedValue "b")),
+          def_main $ MappyApp (MappyNamedValue "second") [MappyKeyword "a", MappyKeyword "b"]
+          ]
+
+      it "applies it as a function" $ do
+        exec code `shouldBe` Right (MappyKeyword "b")
+
     describe "a lambda" $ do
       describe "given the wrong number of arguments" $ do
         let
