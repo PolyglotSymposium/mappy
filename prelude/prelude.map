@@ -7,8 +7,14 @@ false = (:truthy :false)
 
 zero = ()
 
+empty? = \map -> [default-take map (() true) false]
+
 succ = \num -> [give :pred num ()]
 
 pred = \num -> [take :pred num]
 
-main = [succ [succ zero]]
+add = \a b -> [if [empty? a] b [succ [add [pred a] b]]]
+
+two = [succ [succ zero]]
+
+main = [add two two]

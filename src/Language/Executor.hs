@@ -55,13 +55,9 @@ apply env (MappyNamedValue "give") (key:value:map:[]) = do
 apply env (MappyNamedValue "give") args =
   singleError $ WrongNumberOfArguments "give" 3 $ length args
 apply env nonPrimitive args = do
-  (MappyClosure params body env') <- forceToClosure env nonPrimitive
+  (MappyClosure params body env') <- eval env nonPrimitive
   let env'' = zip params args ++ env'
   eval env'' body
-
-forceToClosure :: Env -> Expression -> Either [Error] Expression
-forceToClosure _ closure@(MappyClosure _ _ _) = Right closure
-forceToClosure env nonClosure = eval env nonClosure >>= forceToClosure env
 
 take' :: Env -> Expression -> Expression -> (Expression -> M.Map Expression Expression -> Maybe Expression) -> Either [Error] Expression
 take' env key map f = do
