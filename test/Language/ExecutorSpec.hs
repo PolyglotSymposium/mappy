@@ -154,6 +154,29 @@ spec = do
       it "evaluates to whatever that name evaluates to when looked up" $ do
         exec code `shouldBe` Right (MappyKeyword "bar")
 
+    describe "given a map" $ do
+      describe "with unreduced values" $ do
+        let code = [
+              def_main map]
+            map = MappyMap $ M.fromList [
+              (MappyKeyword "a", MappyNamedValue "b"),
+              (MappyKeyword "c", MappyNamedValue "d")]
+
+        it "does not reduce those values" $ do
+          exec code `shouldBe` Right map
+
+      describe "with unreduced keys" $ do
+        let code = [
+              def_main map,
+              simple_def "a" "b",
+              simple_def "c" "d"]
+            map = MappyMap $ M.fromList [
+              (MappyNamedValue "a", MappyKeyword "b"),
+              (MappyNamedValue "c", MappyKeyword "d")]
+
+        it "reduces those keys" $ do
+          exec code `shouldBe` (Right $ MappyMap $ M.fromList [(MappyKeyword "b", MappyKeyword "b"), (MappyKeyword "d", MappyKeyword "d")])
+
     describe "given main is simply a map" $ do
       let main = [def_main map]
           map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")

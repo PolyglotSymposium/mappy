@@ -18,24 +18,33 @@ data Error =
 singleError :: a -> Either [a] b
 singleError = Left . pure
 
-type ExecutionResult = Either [Error] Expression
+type FullyEvaluated = Either [Error] Expression
 type Env = [(Expression, Expression)]
 
-exec :: [Definition] -> ExecutionResult
+exec :: [Definition] -> FullyEvaluated
 exec defs = do
   checkAgainstRepeatedDefs defs
   init <- initialEnvironment defs
   uncurry eval init
 
-eval :: Env -> Expression -> Either [Error] Expression
+eval :: Env -> Expression -> FullyEvaluated
 eval env namedValue@(MappyNamedValue name) = do
   result <- maybe (singleError $ NameNotDefined name) Right (lookup namedValue env)
   eval env result
 eval env (MappyApp fn params) = apply env fn params
 eval env (MappyLambda args body) = Right $ MappyClosure args body env
+eval env (MappyMap map') = evalKeys (eval env) map'
 eval _ value = Right value
 
-apply :: Env -> Expression -> [Expression] -> Either [Error] Expression
+evalKeys :: (Expression -> FullyEvaluated) -> M.Map Expression Expression -> FullyEvaluated
+evalKeys evaluator map = go [] (M.toList map)
+  where
+  go pairs [] = Right $ MappyMap $ M.fromList pairs
+  go pairs ((key, value):rest) = do
+    key' <- evaluator key
+    go ((key', value):pairs) rest
+
+apply :: Env -> Expression -> [Expression] -> FullyEvaluated
 apply env (MappyNamedValue "take") (key:map:[]) =
   take' env key map M.lookup
 apply env (MappyNamedValue "take") args =
@@ -59,11 +68,11 @@ apply env nonPrimitive args = do
   let env'' = zip params args ++ env'
   eval env'' body
 
-take' :: Env -> Expression -> Expression -> (Expression -> M.Map Expression Expression -> Maybe Expression) -> Either [Error] Expression
+take' :: Env -> Expression -> Expression -> (Expression -> M.Map Expression Expression -> Maybe Expression) -> FullyEvaluated
 take' env key map f = do
   key <- eval env key
-  map <- eval env map
-  result <- maybe (singleError $ KeyNotFound key) Right (mapLookup f key map)
+  map' <- eval env map
+  result <- maybe (singleError $ KeyNotFound key) Right (traceShow (key, map') $ mapLookup f key map')
   eval env result
     where
     mapLookup f key (MappyMap map) = f key map
