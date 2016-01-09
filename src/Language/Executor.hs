@@ -72,7 +72,7 @@ take' :: Env -> Expression -> Expression -> (Expression -> M.Map Expression Expr
 take' env key map f = do
   key <- eval env key
   map' <- eval env map
-  result <- maybe (singleError $ KeyNotFound key) Right (traceShow (key, map') $ mapLookup f key map')
+  result <- maybe (singleError $ KeyNotFound key) Right (mapLookup f key map')
   eval env result
     where
     mapLookup f key (MappyMap map) = f key map

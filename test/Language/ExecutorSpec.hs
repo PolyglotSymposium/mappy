@@ -84,6 +84,56 @@ spec = do
           exec code `shouldBe` Left [GiveCalledOnNonMap (MappyKeyword "a") (MappyKeyword "b") (MappyKeyword "c")]
 
     describe "default-take" $ do
+      describe "given a map with an erroring default value" $ do
+        let
+          code lookup = [
+            def_main $ MappyApp (MappyNamedValue "default-take") [
+              MappyKeyword lookup,
+              MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"),
+              MappyNamedValue "name-not-known"]
+            ]
+
+        describe "when looking up a key in the map" $ do
+          let code' = code "a"
+
+          it "fetches the value successfully" $ do
+            exec code' `shouldBe` Right (MappyKeyword "b")
+
+        describe "when looking up a key that is not in the map" $ do
+          let code' = code "b"
+
+          it "errors because the default key cannot be found" $ do
+            exec code' `shouldBe` Left [NameNotDefined "name-not-known"]
+
+      describe "given a map with an erroring value" $ do
+        let
+          code lookup = [
+            def_main $ MappyApp (MappyNamedValue "default-take") [
+              MappyKeyword lookup,
+              MappyMap $ M.fromList [
+                (MappyKeyword "a", MappyNamedValue "name-not-known"),
+                (MappyKeyword "b", MappyKeyword "b-value")],
+              MappyKeyword "default"]
+            ]
+
+        describe "when looking up the key of the erroring value" $ do
+          let code' = code "a"
+
+          it "errors" $ do
+            exec code' `shouldBe` Left [NameNotDefined "name-not-known"]
+
+        describe "when looking up a key other than the erroring one that is in the map" $ do
+          let code' = code "b"
+
+          it "returns that value alright" $ do
+            exec code' `shouldBe` Right (MappyKeyword "b-value")
+
+        describe "when looking up a key other not in the map" $ do
+          let code' = code "foobar"
+
+          it "returns the default value" $ do
+            exec code' `shouldBe` Right (MappyKeyword "default")
+
       describe "given the wrong number of arguments" $ do
         let
           code = [
