@@ -32,6 +32,19 @@ common_examples = [
     ,("a lamba function", "\\x -> x", MappyLambda [MappyNamedValue "x"] $ MappyNamedValue "x")
   ]
 
+expected_if_def = Right
+  (MappyDef
+    (MappyNamedValue "if")
+    (MappyLambda
+      [MappyNamedValue "cond", MappyNamedValue "then", MappyNamedValue "else"]
+      (MappyApp
+        (MappyNamedValue "default-take")
+        [MappyApp
+          (MappyNamedValue "take")
+          [MappyKeyword "truthy", MappyNamedValue "cond"],
+        MappyMap (M.fromList [(MappyKeyword "false",MappyNamedValue "else")]),
+        MappyNamedValue "then"])))
+
 example_src_file = "a = :a\nb = :b\n\nc = \\x -> x"
 
 spec :: Spec
@@ -69,6 +82,12 @@ spec = do
     describe "binding a non-name" $ do
         it "fails to parse" $ do
           parseDefinition (":foo = :bar") `shouldSatisfy` isLeft
+
+    describe "the if function" $ do
+      let fn = "if = \\cond then else -> [default-take [take :truthy cond] (:false else) then]"
+
+      it "parses correctly" $ do
+        parseDefinition fn `shouldBe` expected_if_def
 
   describe "expression text" $ do
     let parseExpression = parse expression ""
