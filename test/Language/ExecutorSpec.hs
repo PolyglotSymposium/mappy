@@ -3,16 +3,63 @@ module Language.ExecutorSpec (spec) where
 import Test.Hspec
 
 import Language.Ast
+import Language.AstExamples
 import Language.Executor
 
 import qualified Data.Map as M
 
 simple_def name val = MappyDef (MappyNamedValue name) (MappyKeyword val)
 def_main = MappyDef (MappyNamedValue "main")
+truthy_value = MappyMap $ M.singleton (MappyKeyword "truthy") (MappyKeyword "true")
+falsey_value = MappyMap $ M.singleton (MappyKeyword "truthy") (MappyKeyword "false")
 
 spec :: Spec
 spec = do
   describe "exec" $ do
+    describe "laziness" $ do
+      describe "using the if function, defined in terms of default-take" $ do
+        let
+          code thn els cond = [
+            if_def,
+            def_main $ MappyApp (MappyNamedValue "if") [cond, thn, els]]
+
+        describe "when the \"then case\" has an error" $ do
+          let appliedThen = code (MappyNamedValue "name-not-known")
+
+          describe "when the \"else case\" does not have an error" $ do
+            let appliedThenAndElse = appliedThen (MappyKeyword "a")
+
+            describe "when evaluated with something truthy" $ do
+              let fullyApplied = appliedThenAndElse truthy_value
+
+              it "bubbles the error from the then case" $ do
+                exec fullyApplied `shouldBe` Left [NameNotDefined "name-not-known"]
+
+            describe "when evaluated with something falsey" $ do
+              let fullyApplied = appliedThenAndElse falsey_value
+
+              it "returns the else case" $ do
+                exec fullyApplied `shouldBe` Right (MappyKeyword "a")
+
+
+        describe "when the \"then case\" does not have an error" $ do
+          let appliedThen = code (MappyKeyword "a")
+
+          describe "when the \"else case\" has an error" $ do
+            let appliedThenAndElse = appliedThen (MappyNamedValue "name-not-known")
+
+            describe "when evaluated with something truthy" $ do
+              let fullyApplied = appliedThenAndElse truthy_value
+
+              it "returns the then case" $ do
+                exec fullyApplied `shouldBe` Right (MappyKeyword "a")
+
+            describe "when evaluated with something falsey" $ do
+              let fullyApplied = appliedThenAndElse falsey_value
+
+              it "bubbles the error from the else case" $ do
+                exec fullyApplied `shouldBe` Left [NameNotDefined "name-not-known"]
+
     describe "the application of a lambda" $ do
       let
         code = [

@@ -11,6 +11,7 @@ import Test.QuickCheck
 
 import Mappy
 import Language.Ast
+import Language.AstExamples
 
 data ArbitraryValidKeywordName =
   ValidIdentifier String
@@ -31,19 +32,6 @@ common_examples = [
     ,("a named value", "foo", MappyNamedValue "foo")
     ,("a lamba function", "\\x -> x", MappyLambda [MappyNamedValue "x"] $ MappyNamedValue "x")
   ]
-
-expected_if_def = Right
-  (MappyDef
-    (MappyNamedValue "if")
-    (MappyLambda
-      [MappyNamedValue "cond", MappyNamedValue "then", MappyNamedValue "else"]
-      (MappyApp
-        (MappyNamedValue "default-take")
-        [MappyApp
-          (MappyNamedValue "take")
-          [MappyKeyword "truthy", MappyNamedValue "cond"],
-        MappyMap (M.fromList [(MappyKeyword "false",MappyNamedValue "else")]),
-        MappyNamedValue "then"])))
 
 example_src_file = "a = :a\nb = :b\n\nc = \\x -> x"
 
@@ -87,7 +75,7 @@ spec = do
       let fn = "if = \\cond then else -> [default-take [take :truthy cond] (:false else) then]"
 
       it "parses correctly" $ do
-        parseDefinition fn `shouldBe` expected_if_def
+        parseDefinition fn `shouldBe` Right if_def
 
   describe "expression text" $ do
     let parseExpression = parse expression ""
