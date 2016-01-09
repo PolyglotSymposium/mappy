@@ -16,6 +16,17 @@ falsey_value = MappyMap $ M.singleton (MappyKeyword "truthy") (MappyKeyword "fal
 spec :: Spec
 spec = do
   describe "exec" $ do
+    describe "a named value that refers to another named value" $ do
+      let
+        code = [
+          simple_def "b" "c",
+          MappyDef (MappyNamedValue "a") (MappyNamedValue "b"),
+          def_main $ (MappyNamedValue "a")
+          ]
+
+      it "reduces until the final value" $ do
+        exec code `shouldBe` Right (MappyKeyword "c")
+
     describe "laziness" $ do
       describe "using the if function, defined in terms of default-take" $ do
         let

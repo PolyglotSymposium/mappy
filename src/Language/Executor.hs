@@ -45,15 +45,18 @@ evalKeys evaluator map = go [] (M.toList map)
     go ((key', value):pairs) rest
 
 apply :: Env -> Expression -> [Expression] -> FullyEvaluated
-apply env (MappyNamedValue "take") (key:map:[]) =
+apply env expr args = traceShow ("application", ("env", env), ("fn", expr), ("args", args)) $ apply' env expr args
+
+apply' :: Env -> Expression -> [Expression] -> FullyEvaluated
+apply' env (MappyNamedValue "take") (key:map:[]) =
   take' env key map M.lookup
-apply env (MappyNamedValue "take") args =
+apply' env (MappyNamedValue "take") args =
   singleError $ WrongNumberOfArguments "take" 2 $ length args
-apply env (MappyNamedValue "default-take") (key:map:def:[]) =
+apply' env (MappyNamedValue "default-take") (key:map:def:[]) =
   take' env key map (\expr -> Just . M.findWithDefault def expr)
-apply env (MappyNamedValue "default-take") args =
+apply' env (MappyNamedValue "default-take") args =
   singleError $ WrongNumberOfArguments "default-take" 3 $ length args
-apply env (MappyNamedValue "give") (key:value:map:[]) = do
+apply' env (MappyNamedValue "give") (key:value:map:[]) = do
   key' <- eval env key
   map' <- eval env map
   value' <- eval env value
@@ -61,9 +64,9 @@ apply env (MappyNamedValue "give") (key:value:map:[]) = do
     where
     mapInsert k v (MappyMap map) = Just $ MappyMap $ M.insert k v map
     mapInsert _ _ _ = Nothing
-apply env (MappyNamedValue "give") args =
+apply' env (MappyNamedValue "give") args =
   singleError $ WrongNumberOfArguments "give" 3 $ length args
-apply env nonPrimitive args = do
+apply' env nonPrimitive args = do
   (MappyClosure params body env') <- eval env nonPrimitive
   let env'' = zip params args ++ env'
   eval env'' body
