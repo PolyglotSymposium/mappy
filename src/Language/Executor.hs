@@ -45,7 +45,7 @@ evalKeys evaluator map = go [] (M.toList map)
     go ((key', value):pairs) rest
 
 apply :: Env -> Expression -> [Expression] -> FullyEvaluated
-apply env expr args = traceShow ("application", ("env", env), ("fn", expr), ("args", args)) $ apply' env expr args
+apply env expr args = apply' env expr args
 
 apply' :: Env -> Expression -> [Expression] -> FullyEvaluated
 apply' env (MappyNamedValue "take") (key:map:[]) =
@@ -68,17 +68,25 @@ apply' env (MappyNamedValue "give") args =
   singleError $ WrongNumberOfArguments "give" 3 $ length args
 apply' env nonPrimitive args = do
   (MappyClosure params body env') <- eval env nonPrimitive
-  let env'' = zip params args ++ env'
+  let env'' = extendEnvironment params args env'
   eval env'' body
+
+extendEnvironment :: [Expression] -> [Expression] -> Env -> Env
+extendEnvironment [] [] env = env
+extendEnvironment (name:otherNames) (value:otherValues) env =
+  if name == value then rest else (name, value):rest
+    where
+    rest = extendEnvironment otherNames otherValues env
+extendEnvironment _ _ env = error "TODO: error for when extendEnvironment is called without having equal args"
 
 take' :: Env -> Expression -> Expression -> (Expression -> M.Map Expression Expression -> Maybe Expression) -> FullyEvaluated
 take' env key map f = do
-  key <- eval env key
+  key' <- eval env key
   map' <- eval env map
-  result <- maybe (singleError $ KeyNotFound key) Right (mapLookup f key map')
+  result <- maybe (singleError $ KeyNotFound key') Right (mapLookup f key' map')
   eval env result
     where
-    mapLookup f key (MappyMap map) = f key map
+    mapLookup f key' (MappyMap map) = f key' map
     mapLookup _ _ _ = Nothing
 
 checkAgainstRepeatedDefs :: [Definition] -> Either [Error] [Definition]
