@@ -16,4 +16,5 @@ data Expression =
   | MappyClosure [Expression] Expression [(Expression, Expression)]
   | MappyKeyword String
   | MappyNamedValue String
+  | MappyLazyArgument String
   deriving (Eq, Show, Ord)

@@ -25,11 +25,14 @@ definition = do
   expr <- expression
   return $ MappyDef name expr
 
+lazyArgument :: Parser Expression
+lazyArgument = fmap MappyLazyArgument $ char '(' *> optional whiteSpace *> identifier <* optional whiteSpace  <* char ')'
+
 lambda :: Parser Expression
 lambda = do
   char '\\'
   optional whiteSpace
-  names <- manyTill (namedValue <* whiteSpace) (string "->")
+  names <- manyTill ((namedValue <|> lazyArgument) <* whiteSpace) (string "->")
   whiteSpace
   expr <- expression
   return $ MappyLambda names expr

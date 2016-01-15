@@ -93,6 +93,10 @@ spec = do
         it "parses correctly" $ do
           parseExpression "\\ x -> :foo" `shouldBe` Right (MappyLambda [MappyNamedValue "x"] (MappyKeyword "foo"))
 
+      describe "who has a lazy argument" $ do
+        it "parses correctly" $ do
+          parseExpression "\\(  x\t) -> :foo" `shouldBe` Right (MappyLambda [MappyLazyArgument "x"] (MappyKeyword "foo"))
+
       for_ common_examples $ \(typee, body, expected) ->
         describe ("whose body is " ++ typee) $ do
           it "parses correctly" $ do
