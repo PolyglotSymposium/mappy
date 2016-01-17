@@ -35,17 +35,17 @@ eval env namedValue@(MappyNamedValue name) = do
   eval env result
 eval env (MappyApp fn params) = apply env fn params
 eval env (MappyLambda args body) = Right $ MappyClosure args body env
-eval _ (MappyClosure _ body env) = eval env body
-eval env (MappyMap map') = evalKeys (eval env) map'
+eval env (MappyMap map') = evalMap (eval env) map'
 eval _ value = Right value
 
-evalKeys :: (Expression -> FullyEvaluated) -> M.Map Expression Expression -> FullyEvaluated
-evalKeys evaluator map = go [] (M.toList map)
+evalMap :: (Expression -> FullyEvaluated) -> M.Map Expression Expression -> FullyEvaluated
+evalMap evaluator map = go [] (M.toList map)
   where
   go pairs [] = Right $ MappyMap $ M.fromList pairs
   go pairs ((key, value):rest) = do
     key' <- evaluator key
-    go ((key', value):pairs) rest
+    value' <- traceShow ("Evaluating " ++ show (evaluator value))  $ evaluator value
+    go ((key', value'):pairs) rest
 
 apply :: Env -> Expression -> [Expression] -> FullyEvaluated
 apply = apply'
@@ -55,8 +55,9 @@ apply' env (MappyNamedValue "take") (key:map:[]) =
   take' env key map M.lookup
 apply' env (MappyNamedValue "take") args =
   singleError $ WrongNumberOfArguments "take" 2 $ length args
-apply' env (MappyNamedValue "default-take") (key:map:def:[]) =
-  take' env key map (\expr -> Just . M.findWithDefault def expr)
+apply' env (MappyNamedValue "default-take") (key:map:def:[]) = do
+  def' <- eval env def
+  take' env key map (\expr -> Just . M.findWithDefault def' expr)
 apply' env (MappyNamedValue "default-take") args =
   singleError $ WrongNumberOfArguments "default-take" 3 $ length args
 apply' env (MappyNamedValue "give") (key:value:map:[]) = do

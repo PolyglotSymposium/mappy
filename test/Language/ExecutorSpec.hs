@@ -27,50 +27,6 @@ spec = do
       it "reduces until the final value" $ do
         exec code `shouldBe` Right (MappyKeyword "c")
 
-    describe "laziness" $ do
-      describe "using the if function, defined in terms of default-take" $ do
-        let
-          code thn els cond = [
-            if_def,
-            def_main $ MappyApp (MappyNamedValue "if") [cond, thn, els]]
-
-        describe "when the \"then case\" has an error" $ do
-          let appliedThen = code (MappyNamedValue "name-not-known")
-
-          describe "when the \"else case\" does not have an error" $ do
-            let appliedThenAndElse = appliedThen (MappyKeyword "a")
-
-            describe "when evaluated with something truthy" $ do
-              let fullyApplied = appliedThenAndElse truthy_value
-
-              it "bubbles the error from the then case" $ do
-                exec fullyApplied `shouldBe` Left [NameNotDefined "name-not-known"]
-
-            describe "when evaluated with something falsey" $ do
-              let fullyApplied = appliedThenAndElse falsey_value
-
-              it "returns the else case" $ do
-                exec fullyApplied `shouldBe` Right (MappyKeyword "a")
-
-
-        describe "when the \"then case\" does not have an error" $ do
-          let appliedThen = code (MappyKeyword "a")
-
-          describe "when the \"else case\" has an error" $ do
-            let appliedThenAndElse = appliedThen (MappyNamedValue "name-not-known")
-
-            describe "when evaluated with something truthy" $ do
-              let fullyApplied = appliedThenAndElse truthy_value
-
-              it "returns the then case" $ do
-                exec fullyApplied `shouldBe` Right (MappyKeyword "a")
-
-            describe "when evaluated with something falsey" $ do
-              let fullyApplied = appliedThenAndElse falsey_value
-
-              it "bubbles the error from the else case" $ do
-                exec fullyApplied `shouldBe` Left [NameNotDefined "name-not-known"]
-
     describe "the application of a lambda" $ do
       let
         code = [
@@ -151,12 +107,6 @@ spec = do
               MappyNamedValue "name-not-known"]
             ]
 
-        describe "when looking up a key in the map" $ do
-          let code' = code "a"
-
-          it "fetches the value successfully" $ do
-            exec code' `shouldBe` Right (MappyKeyword "b")
-
         describe "when looking up a key that is not in the map" $ do
           let code' = code "b"
 
@@ -179,18 +129,6 @@ spec = do
 
           it "errors" $ do
             exec code' `shouldBe` Left [NameNotDefined "name-not-known"]
-
-        describe "when looking up a key other than the erroring one that is in the map" $ do
-          let code' = code "b"
-
-          it "returns that value alright" $ do
-            exec code' `shouldBe` Right (MappyKeyword "b-value")
-
-        describe "when looking up a key other not in the map" $ do
-          let code' = code "foobar"
-
-          it "returns the default value" $ do
-            exec code' `shouldBe` Right (MappyKeyword "default")
 
       describe "given the wrong number of arguments" $ do
         let
@@ -261,29 +199,6 @@ spec = do
 
       it "evaluates to whatever that name evaluates to when looked up" $ do
         exec code `shouldBe` Right (MappyKeyword "bar")
-
-    describe "given a map" $ do
-      describe "with unreduced values" $ do
-        let code = [
-              def_main map]
-            map = MappyMap $ M.fromList [
-              (MappyKeyword "a", MappyNamedValue "b"),
-              (MappyKeyword "c", MappyNamedValue "d")]
-
-        it "does not reduce those values" $ do
-          exec code `shouldBe` Right map
-
-      describe "with unreduced keys" $ do
-        let code = [
-              def_main map,
-              simple_def "a" "b",
-              simple_def "c" "d"]
-            map = MappyMap $ M.fromList [
-              (MappyNamedValue "a", MappyKeyword "b"),
-              (MappyNamedValue "c", MappyKeyword "d")]
-
-        it "reduces those keys" $ do
-          exec code `shouldBe` (Right $ MappyMap $ M.fromList [(MappyKeyword "b", MappyKeyword "b"), (MappyKeyword "d", MappyKeyword "d")])
 
     describe "given main is simply a map" $ do
       let main = [def_main map]

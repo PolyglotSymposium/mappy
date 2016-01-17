@@ -5,9 +5,9 @@ if = \cond (then) (else) -> [[
 true = (:truthy :true)
 false = (:truthy :false)
 
-zero = ()
-
 empty? = \map -> [default-take map (() true) false]
+
+zero = ()
 
 succ = \num -> [give :pred num ()]
 
@@ -19,6 +19,12 @@ add = \a b -> [
     [succ [add [pred a] b]]
 ]
 
+two = [succ [succ zero]]
+
 identity = \a -> a
 
-main = [add two two]
+nil = ()
+
+cons = \value list -> (:head value :tail list)
+
+main = [cons :foo nil]
