@@ -1,4 +1,4 @@
-module MappySpec (main, spec) where
+module Language.ParserSpec (main, spec) where
 
 import qualified Data.Map as M
 import Data.List (intercalate)
@@ -9,9 +9,9 @@ import Data.Foldable
 import Test.Hspec
 import Test.QuickCheck
 
-import Mappy
 import Language.Ast
 import Language.AstExamples
+import Language.Parser
 
 data ArbitraryValidKeywordName =
   ValidIdentifier String

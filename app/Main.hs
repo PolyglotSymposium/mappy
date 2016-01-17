@@ -2,6 +2,7 @@ module Main where
 
 import Mappy
 import Language.Executor
+import Language.Parser
 import Language.PrettyPrint
 
 import System.Environment (getArgs)
