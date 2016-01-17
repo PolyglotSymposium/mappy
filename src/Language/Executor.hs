@@ -4,6 +4,7 @@ import Debug.Trace
 import qualified Data.Set as S
 import qualified Data.Map as M
 import qualified Data.Either as E
+import Control.Monad (liftM2)
 
 import Language.Ast
 
@@ -47,7 +48,7 @@ evalKeys evaluator map = go [] (M.toList map)
     go ((key', value):pairs) rest
 
 apply :: Env -> Expression -> [Expression] -> FullyEvaluated
-apply env expr args = apply' env expr args
+apply = apply'
 
 apply' :: Env -> Expression -> [Expression] -> FullyEvaluated
 apply' env (MappyNamedValue "take") (key:map:[]) =
@@ -68,28 +69,29 @@ apply' env (MappyNamedValue "give") (key:value:map:[]) = do
     mapInsert _ _ _ = Nothing
 apply' env (MappyNamedValue "give") args =
   singleError $ WrongNumberOfArguments "give" 3 $ length args
-apply' env nonPrimitive args = eval env nonPrimitive >>= applyOrGet args env >>= eval env
-
-applyOrGet args _ (MappyClosure params body closureEnv) = do
-  nextEnv <- extendEnvironment params args closureEnv
-  eval nextEnv body
-applyOrGet _ env nonClosure = Right nonClosure
-
-evalArguments :: [Expression] -> [Expression] -> Env -> Either [Error] [Expression]
-evalArguments names values env = case E.partitionEithers $ map go $ zip names values of
-  ([], exprs) -> Right exprs
-  (errors, _) -> Left $ concat errors
-  where
-  go (MappyLazyArgument _, value) = Right $ MappyClosure [] value env
-  go (_, value) = eval env value
+apply' env nonPrimitive args = do
+  (MappyClosure argNames body closedEnv) <- eval env nonPrimitive
+  env' <- extendEnvironment argNames args closedEnv
+  eval env' body
 
 extendEnvironment :: [Expression] -> [Expression] -> Env -> Either [Error] Env
-extendEnvironment names values env = do
-  values' <- evalArguments names values env
-  Right $ zip (map toNamedValue names) values ++ env
-    where
-    toNamedValue (MappyLazyArgument name) = MappyNamedValue name
-    toNamedValue v = v
+extendEnvironment argNames args env =
+  let
+    -- Env
+    unEvaluated = zip argNames args
+    -- [Either [Error] Env]
+    evaluated = map extend unEvaluated
+    partitioned = E.partitionEithers evaluated
+  in
+    (liftM2 (++)) (final partitioned) (pure env)
+  where
+  final ([], env) = Right env
+  final (errors, _) = Left $ concat errors
+  extend (MappyNamedValue name, value) = do
+    v' <- eval env value
+    return (MappyNamedValue name, v')
+  extend (MappyLazyArgument name, value) = Right (MappyNamedValue name, MappyLambda [] value)
+  extend _ = error "TODO: Better error for when a fn has a non-namey name"
 
 take' :: Env -> Expression -> Expression -> (Expression -> M.Map Expression Expression -> Maybe Expression) -> FullyEvaluated
 take' env key map f = do
