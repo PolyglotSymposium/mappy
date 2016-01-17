@@ -50,7 +50,7 @@ map' = MappyMap <$>
   between (char '(') (char ')') pairs
 
 application :: Parser Expression
-application = between (char '[') (char ']') $ do
+application = between (char '[') (char ']') $ (`MappyApp` []) <$> application <|> do
     optional whiteSpace
     fn <- namedValue
     whiteSpace

@@ -8,11 +8,11 @@ if_def =
   (MappyDef
     (MappyNamedValue "if")
     (MappyLambda
-      [MappyNamedValue "cond", MappyNamedValue "then", MappyNamedValue "else"]
+      [MappyNamedValue "cond", MappyLazyArgument "then", MappyLazyArgument "else"]
       (MappyApp
         (MappyNamedValue "default-take")
         [MappyApp
           (MappyNamedValue "take")
           [MappyKeyword "truthy", MappyNamedValue "cond"],
-        MappyMap (M.fromList [(MappyKeyword "false",MappyNamedValue "else")]),
-        MappyNamedValue "then"])))
+        MappyMap (M.fromList [(MappyKeyword "false",MappyApp (MappyNamedValue "else") [])]),
+        MappyApp (MappyNamedValue "then") []])))

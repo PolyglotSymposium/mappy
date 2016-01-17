@@ -1,4 +1,4 @@
-if = \cond then else -> [
+if = \cond (then) (else) -> [
   default-take [take :truthy cond] (:false else) then
 ]
 
@@ -26,7 +26,7 @@ test-value = (:next (:next (:end :done)))
 two = [succ [succ zero]]
 
 identity = \a -> a
-first-of-two = \a b -> [identity a]
-first-of-three = \a b c -> [first-of-two a b]
+first-of-two = \a b -> a
+first-of-three = \a (b) (c) -> [first-of-two a [b]]
 
 main = [add two two]

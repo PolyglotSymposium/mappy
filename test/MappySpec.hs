@@ -72,7 +72,7 @@ spec = do
           parseDefinition (":foo = :bar") `shouldSatisfy` isLeft
 
     describe "the if function" $ do
-      let fn = "if = \\cond then else -> [default-take [take :truthy cond] (:false else) then]"
+      let fn = "if = \\cond (then) (else) -> [default-take [take :truthy cond] (:false [else]) [then]]"
 
       it "parses correctly" $ do
         parseDefinition fn `shouldBe` Right if_def
@@ -103,6 +103,10 @@ spec = do
             parseExpression ("\\x -> " ++ body) `shouldBe` Right (MappyLambda [MappyNamedValue "x"] expected)
 
     describe "when parsing function applications" $ do
+      describe "with a nested function application" $ do
+        it "parses correctly" $ do
+          property $ \(ValidIdentifier name) ->
+            parseExpression ("[[" ++ name ++ "]]") `shouldBe` Right (MappyApp (MappyApp (MappyNamedValue name) []) [])
       describe "with whitespace on the ends" $ do
         it "parses correctly" $ do
           property $ \(ValidIdentifier name) ->

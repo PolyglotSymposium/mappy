@@ -19,9 +19,9 @@ spec = do
     describe "a named value that refers to another named value" $ do
       let
         code = [
+          def_main $ (MappyNamedValue "a"),
           simple_def "b" "c",
-          MappyDef (MappyNamedValue "a") (MappyNamedValue "b"),
-          def_main $ (MappyNamedValue "a")
+          MappyDef (MappyNamedValue "a") (MappyNamedValue "b")
           ]
 
       it "reduces until the final value" $ do
