@@ -19,12 +19,6 @@ add = \a b -> [
     [succ [add [pred a] b]]
 ]
 
-test = \map -> [default-take :end map [test [take :next map]]]
-
-test-value = (:next (:next (:end :done)))
-
-two = [succ [succ zero]]
-
 identity = \a -> a
 
 main = [add two two]
