@@ -61,12 +61,28 @@ expected-filter-list = [cons :c [cons :d nil]]
 
 always-true = \x -> true
 
+cases = [
+  cons (:name :equal-for-keywords :assertion [equal? :foo :foo]) [
+  cons (:name :equal-for-equal-maps :assertion [equal? two two]) [
+  cons (:name :equal-for-non-equal-maps :assertion [equal? zero two]) [
+  cons (:name :equal-for-functions :assertion [equal? cons cons]) nil
+  cons (:name :cons-works :assertion [equal? [cons :foo nil] (:head :foo :tail ())]) nil
+  cons (:name :add-works-for-trivial-case [assert [equal? [add zero two] two]]) [
+  cons (:name :add-works-for-harder-case [assert [equal? [add two two] [succ [succ two]]]]) [
+  cons (:name :first-class-functions [assert [equal? [apply identity :foo] :foo]]) [
+  cons (:name :map-for-trivial-case [assert [equal? [map identity silly-list] silly-list]]) [
+  cons (:name :map-for-harder-case [assert [equal? [map silly-fn silly-list] expected-map-list]]) [
+  cons (:name :filter-for-trivial-case [assert [equal? [filter always-true silly-list] silly-list]]) [
+  cons (:name :filter-for-harder-case [assert [equal? [filter not-empty? silly-with-empties-list] silly-list]]) nil
+]]]]]]]]]]
+
 main =
   (:equal-for-keywords [assert [equal? :foo :foo]]
    :equal-for-equal-maps [assert [equal? two two]]
    :equal-for-non-equal-maps [assert [not [equal? zero two]]]
    :equal-for-functions [assert [equal? apply apply]]
    :cons-works [assert [equal? [cons :foo nil] (:head :foo :tail ())]]
+
    :add-works-for-trivial-case [assert [equal? [add zero two] two]]
    :add-works-for-harder-case [assert [equal? [add two two] [succ [succ two]]]]
    :first-class-functions [assert [equal? [apply identity :foo] :foo]]
