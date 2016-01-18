@@ -43,4 +43,5 @@ main =
    :test-cons-works [assert [equal? [cons :foo nil] (:head :foo :tail ())]]
    :test-add-works-for-trivial-case [assert [equal? [add zero two] two]]
    :test-add-works-for-harder-case [assert [equal? [add two two] [succ [succ two]]]]
+   :test-add-works-for-harder-case [assert [equal? [apply identity :foo] :foo]]
 )
