@@ -11,6 +11,8 @@ not = \v -> [if v [give :truthy :false v] [give :truthy :true v]]
 
 empty? = \map -> [default-take map (() true) false]
 
+not-empty? = \map -> [not [empty? map]]
+
 zero = ()
 
 succ = \num -> [give :pred num ()]
@@ -41,10 +43,23 @@ map = \f xs -> [
     [cons [f [take :head xs]] [map f [take :tail xs]]]
 ]
 
+filter = \p? xs -> [
+  if [empty? xs]
+    nil
+    [if [p? [take :head xs]]
+      [cons [take :head xs] [filter p? [take :tail xs]]]
+      [filter p? [take :tail xs]]]
+]
+
 silly-list = [cons :a [cons :b nil]]
+silly-with-empties-list = [cons () [cons () [cons :a [cons () [cons :b [cons () nil]]]]]]
 
 silly-fn = \v -> [take v (:a :c :b :d)]
-expected-map = [cons :c [cons :d nil]]
+
+expected-map-list = [cons :c [cons :d nil]]
+expected-filter-list = [cons :c [cons :d nil]]
+
+always-true = \x -> true
 
 main =
   (:equal-for-keywords [assert [equal? :foo :foo]]
@@ -56,5 +71,7 @@ main =
    :add-works-for-harder-case [assert [equal? [add two two] [succ [succ two]]]]
    :first-class-functions [assert [equal? [apply identity :foo] :foo]]
    :map-for-trivial-case [assert [equal? [map identity silly-list] silly-list]]
-   :map-for-harder-case [assert [equal? [map silly-fn silly-list] expected-map]]
+   :map-for-harder-case [assert [equal? [map silly-fn silly-list] expected-map-list]]
+   :filter-for-trivial-case [assert [equal? [filter always-true silly-list] silly-list]]
+   :filter-for-harder-case [assert [equal? [filter not-empty? silly-with-empties-list] silly-list]]
 )
