@@ -43,7 +43,7 @@ pairs = do
 
 map' :: Parser Expression
 map' = MappyMap <$>
-  between (char '(') (char ')') (optional whiteSpace *> pairs)
+  between (char '(') (char ')') pairs
 
 application :: Parser Expression
 application = between (char '[') (char ']') $ (`MappyApp` []) <$> application <|> do

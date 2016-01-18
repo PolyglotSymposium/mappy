@@ -61,17 +61,29 @@ expected-filter-list = [cons :c [cons :d nil]]
 
 always-true = \x -> true
 
-main =
-  (:equal-for-keywords [assert [equal? :foo :foo]]
-   :equal-for-equal-maps [assert [equal? two two]]
-   :equal-for-non-equal-maps [assert [not [equal? zero two]]]
-   :equal-for-functions [assert [equal? apply apply]]
-   :cons-works [assert [equal? [cons :foo nil] (:head :foo :tail ())]]
-   :add-works-for-trivial-case [assert [equal? [add zero two] two]]
-   :add-works-for-harder-case [assert [equal? [add two two] [succ [succ two]]]]
-   :first-class-functions [assert [equal? [apply identity :foo] :foo]]
-   :map-for-trivial-case [assert [equal? [map identity silly-list] silly-list]]
-   :map-for-harder-case [assert [equal? [map silly-fn silly-list] expected-map-list]]
-   :filter-for-trivial-case [assert [equal? [filter always-true silly-list] silly-list]]
-   :filter-for-harder-case [assert [equal? [filter not-empty? silly-with-empties-list] silly-list]]
-)
+cases = [
+  cons (:name :equal-for-keywords :assertion [equal? :foo :foo]) [
+  cons (:name :equal-for-equal-maps :assertion [equal? two two]) [
+  cons (:name :equal-for-non-equal-maps :assertion [not [equal? zero two]]) [
+  cons (:name :equal-for-functions :assertion [equal? cons cons]) nil
+  cons (:name :cons-works :assertion [equal? [cons :foo nil] (:head :foo :tail ())]) nil
+  cons (:name :add-works-for-trivial-case :assertion [assert [equal? [add zero two] two]]) [
+  cons (:name :add-works-for-harder-case :assertion [assert [equal? [add two two] [succ [succ two]]]]) [
+  cons (:name :first-class-functions :assertion [assert [equal? [apply identity :foo] :foo]]) [
+  cons (:name :map-for-trivial-case :assertion [assert [equal? [map identity silly-list] silly-list]]) [
+  cons (:name :map-for-harder-case :assertion [assert [equal? [map silly-fn silly-list] expected-map-list]]) [
+  cons (:name :filter-for-trivial-case :assertion [assert [equal? [filter always-true silly-list] silly-list]]) [
+  cons (:name :filter-for-harder-case :assertion [assert [equal? [filter not-empty? silly-with-empties-list] silly-list]]) nil
+]]]]]]]]]]
+
+taking = \key -> \map -> [take key map]
+
+assertion-fails = \case -> [
+  not [take :assertion case]
+]
+
+run-tests = \cases -> [
+  map [taking :name] [filter assertion-fails cases]
+]
+
+main = [run-tests cases]

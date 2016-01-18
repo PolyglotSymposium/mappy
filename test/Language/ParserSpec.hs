@@ -3,7 +3,7 @@ module Language.ParserSpec (main, spec) where
 import qualified Data.Map as M
 import Data.List (intercalate)
 import Text.ParserCombinators.Parsec (parse)
-import Data.Either (isLeft, isRight)
+import Data.Either (isLeft)
 import Data.Foldable
 
 import Test.Hspec
@@ -131,14 +131,6 @@ spec = do
           parseExpression "[()]" `shouldSatisfy` isLeft
 
     describe "when parsing maps" $ do
-      describe "a map with extraneous whitespace" $ do
-        it "successfully parses" $ do
-          parseExpression "(\n   \n\t :foo\t\t\n :bar  \n)\n" `shouldSatisfy` isRight
-
-      describe "a map with minimal whitespace" $ do
-        it "successfully parses" $ do
-          parseExpression "(:foo :bar)" `shouldSatisfy` isRight
-
       describe "the empty map" $ do
         it "parses correctly" $ do
           parseExpression "()" `shouldBe` Right (MappyMap M.empty)
