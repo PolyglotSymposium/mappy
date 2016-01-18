@@ -35,7 +35,7 @@ eval env namedValue@(MappyNamedValue name) = do
   eval env result
 eval env (MappyApp fn params) = apply env fn params
 eval env (MappyLambda args body) = Right $ MappyClosure args body env
-eval env (MappyClosure args body env') = Right $ MappyClosure args body (env' ++ env)
+eval env (MappyClosure args body env') = Right $ MappyClosure args body (env ++ env')
 eval env (MappyMap map') = evalMap (eval env) map'
 eval _ value = Right value
 

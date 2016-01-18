@@ -35,13 +35,26 @@ apply = \fn v -> [fn v]
 
 assert = \c a b -> [if c :pass :fail]
 
+map = \f xs -> [
+  if [empty? xs]
+    nil
+    [cons [f [take :head xs]] [map f [take :tail xs]]]
+]
+
+silly-list = [cons :a [cons :b nil]]
+
+silly-fn = \v -> [take v (:a :c :b :d)]
+expected-map = [cons :c [cons :d nil]]
+
 main =
-  (:test-equal-for-keywords [assert [equal? :foo :foo]]
-   :test-equal-for-equal-maps [assert [equal? two two]]
-   :test-equal-for-non-equal-maps [assert [not [equal? zero two]]]
-   :test-equal-for-functions [assert [equal? apply apply]]
-   :test-cons-works [assert [equal? [cons :foo nil] (:head :foo :tail ())]]
-   :test-add-works-for-trivial-case [assert [equal? [add zero two] two]]
-   :test-add-works-for-harder-case [assert [equal? [add two two] [succ [succ two]]]]
-   :test-first-class-functions [assert [equal? [apply identity :foo] :foo]]
+  (:equal-for-keywords [assert [equal? :foo :foo]]
+   :equal-for-equal-maps [assert [equal? two two]]
+   :equal-for-non-equal-maps [assert [not [equal? zero two]]]
+   :equal-for-functions [assert [equal? apply apply]]
+   :cons-works [assert [equal? [cons :foo nil] (:head :foo :tail ())]]
+   :add-works-for-trivial-case [assert [equal? [add zero two] two]]
+   :add-works-for-harder-case [assert [equal? [add two two] [succ [succ two]]]]
+   :first-class-functions [assert [equal? [apply identity :foo] :foo]]
+   :map-for-trivial-case [assert [equal? [map identity silly-list] silly-list]]
+   :map-for-harder-case [assert [equal? [map silly-fn silly-list] expected-map]]
 )
