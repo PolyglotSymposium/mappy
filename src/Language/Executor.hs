@@ -44,7 +44,7 @@ evalMap evaluator map = go [] (M.toList map)
   go pairs [] = Right $ MappyMap $ M.fromList pairs
   go pairs ((key, value):rest) = do
     key' <- evaluator key
-    value' <- traceShow ("Evaluating " ++ show (evaluator value))  $ evaluator value
+    value' <- evaluator value
     go ((key', value'):pairs) rest
 
 apply :: Env -> Expression -> [Expression] -> FullyEvaluated

@@ -5,6 +5,10 @@ if = \cond (then) (else) -> [[
 true = (:truthy :true)
 false = (:truthy :false)
 
+equal? = \a b -> [default-take a (b true) false]
+
+not = \v -> [if v [give :truthy :false v] [give :truthy :true v]]
+
 empty? = \map -> [default-take map (() true) false]
 
 zero = ()
@@ -27,4 +31,16 @@ nil = ()
 
 cons = \value list -> (:head value :tail list)
 
-main = [cons :foo nil]
+apply = \fn v -> [fn v]
+
+assert = \c a b -> [if c :pass :fail]
+
+main =
+  (:test-equal-for-keywords [assert [equal? :foo :foo]]
+   :test-equal-for-equal-maps [assert [equal? two two]]
+   :test-equal-for-non-equal-maps [assert [not [equal? zero two]]]
+   :test-equal-for-functions [assert [equal? apply apply]]
+   :test-cons-works [assert [equal? [cons :foo nil] (:head :foo :tail ())]]
+   :test-add-works-for-trivial-case [assert [equal? [add zero two] two]]
+   :test-add-works-for-harder-case [assert [equal? [add two two] [succ [succ two]]]]
+)
