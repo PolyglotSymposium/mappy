@@ -1,23 +1,23 @@
-if = \cond (then) (else) -> [[
+if cond (then) (else) = [[
   default-take [take :truthy cond] (:false else) then
 ]]
 
 true = (:truthy :true)
 false = (:truthy :false)
 
-equal? = \a b -> [default-take a (b true) false]
+equal? a b = [default-take a (b true) false]
 
-not = \v -> [if v [give :truthy :false v] [give :truthy :true v]]
+not v = [if v [give :truthy :false v] [give :truthy :true v]]
 
-empty? = \map -> [default-take map (() true) false]
+empty? map = [default-take map (() true) false]
 
 zero = ()
 
-succ = \num -> [give :pred num ()]
+succ num = [give :pred num ()]
 
-pred = \num -> [take :pred num]
+pred num = [take :pred num]
 
-add = \a b -> [
+add a b = [
   if [empty? a]
     b
     [succ [add [pred a] b]]
@@ -25,25 +25,25 @@ add = \a b -> [
 
 two = [succ [succ zero]]
 
-identity = \a -> a
+identity a = a
 
-. = \f g -> \x -> [f [g x]]
+. f g = \x -> [f [g x]]
 
 nil = ()
 
-cons = \value list -> (:head value :tail list)
+cons value list = (:head value :tail list)
 
-apply = \fn v -> [fn v]
+apply fn v = [fn v]
 
-assert = \c -> [if c :pass :fail]
+assert c = [if c :pass :fail]
 
-map = \f xs -> [
+map f xs = [
   if [empty? xs]
     nil
     [cons [f [take :head xs]] [map f [take :tail xs]]]
 ]
 
-filter = \p? xs -> [
+filter p? xs = [
   if [empty? xs]
     nil
     [if [p? [take :head xs]]
@@ -54,12 +54,12 @@ filter = \p? xs -> [
 silly-list = [cons :a [cons :b nil]]
 silly-with-empties-list = [cons () [cons () [cons :a [cons () [cons :b [cons () nil]]]]]]
 
-silly-fn = \v -> [take v (:a :c :b :d)]
+silly-fn v = [take v (:a :c :b :d)]
 
 expected-map-list = [cons :c [cons :d nil]]
 expected-filter-list = [cons :c [cons :d nil]]
 
-always-true = \x -> true
+always-true _ = true
 
 cases = [
   cons (:name :equal-for-keywords :assertion [equal? :foo :foo]) [
@@ -78,13 +78,13 @@ cases = [
   cons (:name :compose-for-harder-case :assertion [[. not not] true]) nil
 ]]]]]]]]]]]]]]
 
-taking = \key -> \map -> [take key map]
+taking key = \map -> [take key map]
 
-assertion-fails = \case -> [
+assertion-fails case = [
   not [take :assertion case]
 ]
 
-run-tests = \cases -> [
+run-tests cases = [
   map [taking :name] [filter assertion-fails cases]
 ]
 

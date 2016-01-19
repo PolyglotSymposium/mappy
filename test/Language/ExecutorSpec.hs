@@ -16,6 +16,19 @@ falsey_value = MappyMap $ M.singleton (MappyKeyword "truthy") (MappyKeyword "fal
 spec :: Spec
 spec = do
   describe "exec" $ do
+    describe "given a sugared function def" $ do
+      let
+        code = [
+          DefSugar (SugaredFnDefinition (MappyNamedValue "first") [
+            MappyNamedValue "a"
+            , MappyNamedValue "b"
+            ] $ MappyNamedValue "a")
+          , def_main $ MappyApp (MappyNamedValue "first") [MappyKeyword "a", MappyKeyword "b"]
+          ]
+
+      it "runs the function as if it were simply defined as a lambda" $ do
+        exec code `shouldBe` Right (MappyKeyword "a")
+
     describe "a named value that refers to another named value" $ do
       let
         code = [

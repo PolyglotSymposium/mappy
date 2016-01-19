@@ -7,6 +7,7 @@ import qualified Data.Either as E
 import Control.Monad (liftM2)
 
 import Language.Ast
+import Language.Desugar
 
 data Error =
   MainNotFound
@@ -25,8 +26,9 @@ type Env = [(Expression, Expression)]
 
 exec :: [Definition] -> FullyEvaluated
 exec defs = do
-  checkAgainstRepeatedDefs defs
-  (env, mainExpr) <- initialEnvironment defs
+  let desugaredDefs = map desugarEachDef defs
+  checkAgainstRepeatedDefs desugaredDefs
+  (env, mainExpr) <- initialEnvironment desugaredDefs
   eval env mainExpr
 
 eval :: Env -> Expression -> FullyEvaluated

@@ -1,12 +1,18 @@
 module Language.Ast (
-  Definition(..),
-  Expression(..)
+  Definition(..)
+  ,Expression(..)
+  ,SugaredDefinition(..)
   ) where
 
 import qualified Data.Map as M
 
+data SugaredDefinition =
+  SugaredFnDefinition Expression [Expression] Expression
+  deriving (Eq, Show, Ord)
+
 data Definition =
   MappyDef Expression Expression
+  | DefSugar SugaredDefinition
   deriving (Eq, Show)
 
 data Expression =

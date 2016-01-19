@@ -16,10 +16,21 @@ definition :: Parser Definition
 definition = do
   name <- namedValue
   whiteSpace
+  (valueDefinition name <|> functionDefinition name)
+
+valueDefinition :: Expression -> Parser Definition
+valueDefinition name = do
   char '='
   whiteSpace
   expr <- expression
   return $ MappyDef name expr
+
+functionDefinition :: Expression -> Parser Definition
+functionDefinition name = do
+  names <- namesEndingWith $ char '='
+  whiteSpace
+  expr <- expression
+  return $ DefSugar $ SugaredFnDefinition name names expr
 
 lazyArgument :: Parser Expression
 lazyArgument = fmap MappyLazyArgument $ char '(' *> optional whiteSpace *> identifier <* optional whiteSpace  <* char ')'
@@ -28,10 +39,13 @@ lambda :: Parser Expression
 lambda = do
   char '\\'
   optional whiteSpace
-  names <- manyTill ((namedValue <|> lazyArgument) <* whiteSpace) (string "->")
+  names <- namesEndingWith $ string "->"
   whiteSpace
   expr <- expression
   return $ MappyLambda names expr
+
+namesEndingWith :: Parser a -> Parser [Expression]
+namesEndingWith end = manyTill ((namedValue <|> lazyArgument) <* whiteSpace) end
 
 pairs :: Parser (M.Map Expression Expression)
 pairs = do

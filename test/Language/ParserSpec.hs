@@ -63,6 +63,10 @@ spec = do
   describe "definition text" $ do
     let parseDefinition = parse definition ""
 
+    describe "of a sugared function" $
+      it "parses correctly" $ do
+        parseDefinition "first a b = a" `shouldBe` (Right $ DefSugar $ SugaredFnDefinition (MappyNamedValue "first") [MappyNamedValue "a", MappyNamedValue "b"] $ MappyNamedValue "a")
+
     for_ common_examples $ \(typee, boundValue, expected) ->
       describe ("binding a name to " ++ typee) $ do
         it "parses correctly" $ do
