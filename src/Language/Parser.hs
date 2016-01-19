@@ -46,9 +46,9 @@ map' = MappyMap <$>
   between (char '(') (char ')') pairs
 
 application :: Parser Expression
-application = between (char '[') (char ']') $ (`MappyApp` []) <$> application <|> do
+application = between (char '[') (char ']') $ do
     optional whiteSpace
-    fn <- namedValue
+    fn <- (namedValue <|> application)
     whiteSpace
     args <- expression `sepEndBy` whiteSpace
     return $ MappyApp fn args
