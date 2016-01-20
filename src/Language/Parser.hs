@@ -6,6 +6,15 @@ import Text.ParserCombinators.Parsec
 
 parseFile = parse file "(unknown)"
 
+defOrExpr :: Parser (Maybe (Either Definition Expression))
+defOrExpr =
+  Just . Left <$> try (fullTerm definition) <|>
+  Just . Right <$> fullTerm expression <|>
+  eof *> pure Nothing
+
+fullTerm :: Parser a -> Parser a
+fullTerm p = p <* optional whiteSpace <* eof
+
 file :: Parser [Definition]
 file = whiteSpace *> definition `sepEndBy` whiteSpace
 

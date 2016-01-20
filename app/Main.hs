@@ -1,6 +1,7 @@
 module Main where
 
 import Mappy
+import Repl
 import Language.Ast
 import Language.Executor
 import Language.Parser
@@ -18,4 +19,4 @@ main = do
         Right decls -> case exec decls of
           Left e -> print e
           Right expr -> putStrLn ("Program returned: " ++ pretty expr)
-    [] -> putStrLn "No file given!"
+    [] -> repl
