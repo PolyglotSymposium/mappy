@@ -1,9 +1,9 @@
 module Main where
 
 import Mappy
+import Language.Ast
 import Language.Executor
 import Language.Parser
-import Language.PrettyPrint
 
 import System.Environment (getArgs)
 
@@ -15,5 +15,7 @@ main = do
       contents <- readFile fileName
       case parseFile contents of
         Left e -> print e
-        Right decls -> print $ pretty <$> exec decls
+        Right decls -> case exec decls of
+          Left e -> print e
+          Right expr -> putStrLn ("Program returned: " ++ pretty expr)
     [] -> putStrLn "No file given!"

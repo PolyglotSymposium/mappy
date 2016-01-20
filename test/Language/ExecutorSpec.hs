@@ -60,7 +60,9 @@ spec = do
             ]
 
         it "evaluates to a closure containing the same information and the environment" $ do
-          exec code `shouldBe` Right (MappyClosure [MappyNamedValue "a", MappyNamedValue "b"] (MappyKeyword "x") [(MappyNamedValue "a", MappyKeyword "b")])
+          let
+            Right (MappyClosure _ (MappyKeyword _) (fst:_)) = exec code
+          fst `shouldBe` (MappyNamedValue "a", MappyKeyword "b")
 
       describe "given a new key and value" $ do
         let

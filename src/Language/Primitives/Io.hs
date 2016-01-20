@@ -1,6 +1,13 @@
 module Language.Primitives.Io where
 
-ioMap = undefined
+import Debug.Trace
+
+import Language.Primitives.IoAble
 
 data Io = Io
   deriving (Eq, Show, Ord)
+
+ioInsert :: IoAble a => a -> a -> ()
+ioInsert key value = case meansPrint key of
+  True -> trace (stringify value) ()
+  False -> ()

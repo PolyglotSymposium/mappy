@@ -9,6 +9,7 @@ import Control.Monad (liftM2)
 import Language.Ast
 import Language.Desugar
 import Language.Error
+import Language.Primitives
 import Language.Primitives.Map as PM
 
 type FullyEvaluated = Either [Error Expression] Expression
@@ -104,7 +105,7 @@ checkAgainstRepeatedDefs defs = go (S.empty, []) defs
 initialEnvironment :: [Definition] -> Either [Error Expression] (Env, Expression)
 initialEnvironment = go ([], Nothing)
   where
-  go (env, Just m) [] = Right (env, m)
+  go (env, Just m) [] = Right (env ++ primitives, m)
   go (_, Nothing) [] = singleError MainNotFound
   go (env, _) (MappyDef (MappyNamedValue "main") mainBody:rest) = go (env, Just mainBody) rest
   go (env, maybeMain) (MappyDef name body:rest) = go ((name, body):env, maybeMain) rest

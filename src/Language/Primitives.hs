@@ -2,6 +2,9 @@ module Language.Primitives where
 
 import Language.Ast
 import Language.Primitives.Io
+import Language.Primitives.Map
 
-lookupPrimitive :: Expression -> Expression
-lookupPrimitive (MappyNamedValue "__prim_io_map") = ioMap
+primitives :: [(Expression, Expression)]
+primitives = [
+  (MappyNamedValue "__prim_io_map", MappyMap $ IoMap Io)
+  ]

@@ -3,6 +3,7 @@ module Language.Primitives.Map where
 import qualified Data.Map as M
 
 import Language.Primitives.Io
+import Language.Primitives.IoAble
 import Language.Error
 
 newtype UnifiedMap a = UnifiedMap (M.Map a a)
@@ -20,6 +21,6 @@ findWithDefault :: Ord a => a -> a -> PrimitiveMap a -> a
 findWithDefault def key (StandardMap map) = M.findWithDefault def key map
 findWithDefault _ _ (IoMap Io) = undefined
 
-insert :: Ord a => a -> a -> PrimitiveMap a -> PrimitiveMap a
+insert :: (IoAble a, Ord a) => a -> a -> PrimitiveMap a -> PrimitiveMap a
 insert key value (StandardMap map) = StandardMap $ M.insert key value map
-insert key value (IoMap Io) = undefined
+insert key value (IoMap Io) = seq (ioInsert key value) (IoMap Io)
