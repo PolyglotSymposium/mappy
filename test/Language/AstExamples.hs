@@ -1,6 +1,7 @@
 module Language.AstExamples where
 
 import Language.Ast
+import Language.Primitives.Map
 
 import qualified Data.Map as M
 
@@ -14,5 +15,5 @@ if_def =
         [MappyApp
           (MappyNamedValue "take")
           [MappyKeyword "truthy", MappyNamedValue "cond"],
-        MappyMap (M.fromList [(MappyKeyword "false",MappyApp (MappyNamedValue "else") [])]),
+        MappyMap $ StandardMap $ M.fromList [(MappyKeyword "false",MappyApp (MappyNamedValue "else") [])],
         MappyApp (MappyNamedValue "then") []])))

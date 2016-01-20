@@ -68,7 +68,7 @@ pairs = do
     toMap (k:v:rest) = M.insert k v $ toMap rest
 
 map' :: Parser Expression
-map' = MappyMap <$>
+map' = MappyMap <$> StandardMap <$>
   between (char '(') (char ')') pairs
 
 application :: Parser Expression

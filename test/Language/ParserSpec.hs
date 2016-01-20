@@ -27,8 +27,8 @@ instance Arbitrary ArbitraryValidKeywordName where
 
 common_examples = [
     ("a keyword", ":some-keyword", MappyKeyword "some-keyword")
-    ,("a map", "(:foo :bar)", MappyMap $ M.singleton (MappyKeyword "foo") (MappyKeyword "bar"))
-    ,("an application", "[foo ()]", MappyApp (MappyNamedValue "foo") [MappyMap M.empty])
+    ,("a map", "(:foo :bar)", MappyMap $ StandardMap $ M.singleton (MappyKeyword "foo") (MappyKeyword "bar"))
+    ,("an application", "[foo ()]", MappyApp (MappyNamedValue "foo") [MappyMap $ StandardMap M.empty])
     ,("a named value", "foo", MappyNamedValue "foo")
     ,("a lamba function", "\\x -> x", MappyLambda [MappyNamedValue "x"] $ MappyNamedValue "x")
   ]
@@ -164,20 +164,20 @@ spec = do
     describe "when parsing maps" $ do
       describe "the empty map" $ do
         it "parses correctly" $ do
-          parseExpression "()" `shouldBe` Right (MappyMap M.empty)
+          parseExpression "()" `shouldBe` Right (MappyMap $ StandardMap M.empty)
 
       describe "a map containing" $ do
         describe "a single association of keywords" $ do
           it "parses correctly" $ do
-            parseExpression "(:a :b)" `shouldBe` Right (MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"))
+            parseExpression "(:a :b)" `shouldBe` Right (MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"))
 
         describe "a single association of maps" $ do
           it "parses correctly" $ do
-            parseExpression "(() ())" `shouldBe` Right (MappyMap $ M.singleton (MappyMap M.empty) (MappyMap M.empty))
+            parseExpression "(() ())" `shouldBe` Right (MappyMap $ StandardMap $ M.singleton (MappyMap $ StandardMap M.empty) (MappyMap $ StandardMap M.empty))
 
         describe "a single association of a map to a keyword" $ do
           it "parses correctly" $ do
-            parseExpression "(() :foobar)" `shouldBe` Right (MappyMap $ M.singleton (MappyMap M.empty) (MappyKeyword "foobar"))
+            parseExpression "(() :foobar)" `shouldBe` Right (MappyMap $ StandardMap $ M.singleton (MappyMap $ StandardMap $ M.empty) (MappyKeyword "foobar"))
 
     describe "a single keyword" $ do
       it "parses correctly" $ do

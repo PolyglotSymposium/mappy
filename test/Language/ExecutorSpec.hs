@@ -4,14 +4,15 @@ import Test.Hspec
 
 import Language.Ast
 import Language.AstExamples
+import Language.Error
 import Language.Executor
 
 import qualified Data.Map as M
 
 simple_def name val = MappyDef (MappyNamedValue name) (MappyKeyword val)
 def_main = MappyDef (MappyNamedValue "main")
-truthy_value = MappyMap $ M.singleton (MappyKeyword "truthy") (MappyKeyword "true")
-falsey_value = MappyMap $ M.singleton (MappyKeyword "truthy") (MappyKeyword "false")
+truthy_value = MappyMap $ StandardMap $ M.singleton (MappyKeyword "truthy") (MappyKeyword "true")
+falsey_value = MappyMap $ StandardMap $ M.singleton (MappyKeyword "truthy") (MappyKeyword "false")
 
 spec :: Spec
 spec = do
@@ -63,13 +64,13 @@ spec = do
 
       describe "given a new key and value" $ do
         let
-          map = MappyMap M.empty
+          map = MappyMap $ StandardMap M.empty
           code = [
             def_main $ MappyApp (MappyNamedValue "give") [MappyKeyword "a", MappyKeyword "b", map]
             ]
 
         it "returns a map with the new key" $ do
-          exec code `shouldBe` Right (MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"))
+          exec code `shouldBe` Right (MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"))
 
     describe "give" $ do
       describe "given the wrong number of arguments" $ do
@@ -83,23 +84,23 @@ spec = do
 
       describe "given a new key and value" $ do
         let
-          map = MappyMap M.empty
+          map = MappyMap $ StandardMap M.empty
           code = [
             def_main $ MappyApp (MappyNamedValue "give") [MappyKeyword "a", MappyKeyword "b", map]
             ]
 
         it "returns a map with the new key" $ do
-          exec code `shouldBe` Right (MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"))
+          exec code `shouldBe` Right (MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"))
 
       describe "given an existing key" $ do
         let
-          map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
           code = [
             def_main $ MappyApp (MappyNamedValue "give") [MappyKeyword "a", MappyKeyword "c", map]
             ]
 
         it "overwrites the old value at the key" $ do
-          exec code `shouldBe` Right (MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "c"))
+          exec code `shouldBe` Right (MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "c"))
 
       describe "given a new key and a non-map" $ do
         let
@@ -116,7 +117,7 @@ spec = do
           code lookup = [
             def_main $ MappyApp (MappyNamedValue "default-take") [
               MappyKeyword lookup,
-              MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"),
+              MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"),
               MappyNamedValue "name-not-known"]
             ]
 
@@ -131,7 +132,7 @@ spec = do
           code lookup = [
             def_main $ MappyApp (MappyNamedValue "default-take") [
               MappyKeyword lookup,
-              MappyMap $ M.fromList [
+              MappyMap $ StandardMap $ M.fromList [
                 (MappyKeyword "a", MappyNamedValue "name-not-known"),
                 (MappyKeyword "b", MappyKeyword "b-value")],
               MappyKeyword "default"]
@@ -154,7 +155,7 @@ spec = do
 
       describe "given a key that\'s not in the map and a default" $ do
         let
-          map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
           code = [
             def_main $ MappyApp (MappyNamedValue "default-take") [MappyKeyword "not", map, MappyKeyword "default"]
             ]
@@ -164,7 +165,7 @@ spec = do
 
       describe "given a key that\'s in the map" $ do
         let
-          map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
           code = [
             def_main $ MappyApp (MappyNamedValue "default-take") [MappyKeyword "a", map, MappyKeyword "default"]
             ]
@@ -175,7 +176,7 @@ spec = do
     describe "take" $ do
       describe "given the wrong number of arguments" $ do
         let
-          map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
           code = [
             def_main $ MappyApp (MappyNamedValue "take") [MappyKeyword "a"]
             ]
@@ -185,7 +186,7 @@ spec = do
 
       describe "given a key that\'s not in the map" $ do
         let
-          map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
           code = [
             def_main $ MappyApp (MappyNamedValue "take") [MappyKeyword "not", map]
             ]
@@ -195,7 +196,7 @@ spec = do
 
       describe "given the correct arguments" $ do
         let
-          map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
           code = [
             def_main $ MappyApp (MappyNamedValue "take") [MappyKeyword "a", map]
             ]
@@ -215,7 +216,7 @@ spec = do
 
     describe "given main is simply a map" $ do
       let main = [def_main map]
-          map = MappyMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
 
       it "evaluates to just that map" $ do
         exec main `shouldBe` Right map

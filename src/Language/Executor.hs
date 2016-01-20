@@ -1,27 +1,17 @@
 module Language.Executor where
 
 import Debug.Trace
-import qualified Data.Set as S
-import qualified Data.Map as M
 import qualified Data.Either as E
+import qualified Data.Map as M
+import qualified Data.Set as S
 import Control.Monad (liftM2)
 
 import Language.Ast
 import Language.Desugar
+import Language.Error
+import Language.Primitives.Map as PM
 
-data Error =
-  MainNotFound
-  | RepeatedDefinition String
-  | NameNotDefined String
-  | WrongNumberOfArguments String Int Int
-  | KeyNotFound Expression
-  | GiveCalledOnNonMap Expression Expression Expression
-  deriving (Show, Eq)
-
-singleError :: a -> Either [a] b
-singleError = Left . pure
-
-type FullyEvaluated = Either [Error] Expression
+type FullyEvaluated = Either [Error Expression] Expression
 type Env = [(Expression, Expression)]
 
 exec :: [Definition] -> FullyEvaluated
@@ -33,7 +23,7 @@ exec defs = do
 
 eval :: Env -> Expression -> FullyEvaluated
 eval env namedValue@(MappyNamedValue name) = do
-  result <- maybe (singleError $ NameNotDefined name) Right (lookup namedValue env)
+  result <- maybe (singleError $ NameNotDefined name) Right (Prelude.lookup namedValue env)
   eval env result
 eval env (MappyApp fn params) = apply env fn params
 eval env (MappyLambda args body) = Right $ MappyClosure args body env
@@ -41,26 +31,31 @@ eval env (MappyClosure args body env') = Right $ MappyClosure args body (env ++ 
 eval env (MappyMap map') = evalMap (eval env) map'
 eval _ value = Right value
 
-evalMap :: (Expression -> FullyEvaluated) -> M.Map Expression Expression -> FullyEvaluated
-evalMap evaluator map = go [] (M.toList map)
+evalMap :: (Expression -> FullyEvaluated) -> PrimitiveMap Expression -> FullyEvaluated
+evalMap evaluator (StandardMap map) = go [] (M.toList map)
   where
-  go pairs [] = Right $ MappyMap $ M.fromList pairs
+  go pairs [] = Right $ MappyMap $ StandardMap $ M.fromList pairs
   go pairs ((key, value):rest) = do
     key' <- evaluator key
     value' <- evaluator value
     go ((key', value'):pairs) rest
+evalMap _ map = Right $ MappyMap $ map
 
 apply :: Env -> Expression -> [Expression] -> FullyEvaluated
 apply = apply'
 
 apply' :: Env -> Expression -> [Expression] -> FullyEvaluated
-apply' env (MappyNamedValue "take") (key:map:[]) =
-  take' env key map M.lookup
+apply' env (MappyNamedValue "take") (key:map:[]) = do
+  key' <- eval env key
+  (MappyMap map') <- eval env map
+  maybe (singleError $ KeyNotFound key') Right $ PM.lookup key' map'
 apply' env (MappyNamedValue "take") args =
   singleError $ WrongNumberOfArguments "take" 2 $ length args
 apply' env (MappyNamedValue "default-take") (key:map:def:[]) = do
+  key' <- eval env key
   def' <- eval env def
-  take' env key map (\expr -> Just . M.findWithDefault def' expr)
+  (MappyMap map') <- eval env map
+  return $ PM.findWithDefault def' key' map'
 apply' env (MappyNamedValue "default-take") args =
   singleError $ WrongNumberOfArguments "default-take" 3 $ length args
 apply' env (MappyNamedValue "give") (key:value:map:[]) = do
@@ -69,7 +64,7 @@ apply' env (MappyNamedValue "give") (key:value:map:[]) = do
   value' <- eval env value
   maybe (singleError $ GiveCalledOnNonMap key value' map') Right (mapInsert key' value' map')
     where
-    mapInsert k v (MappyMap map) = Just $ MappyMap $ M.insert k v map
+    mapInsert k v (MappyMap map) = Just $ MappyMap $ PM.insert k v map
     mapInsert _ _ _ = Nothing
 apply' env (MappyNamedValue "give") args =
   singleError $ WrongNumberOfArguments "give" 3 $ length args
@@ -78,7 +73,7 @@ apply' env nonPrimitive args = do
   env' <- extendEnvironment argNames args closedEnv
   eval env' body
 
-extendEnvironment :: [Expression] -> [Expression] -> Env -> Either [Error] Env
+extendEnvironment :: [Expression] -> [Expression] -> Env -> Either [Error Expression] Env
 extendEnvironment argNames args env =
   let
     -- Env
@@ -97,17 +92,7 @@ extendEnvironment argNames args env =
   extend (MappyLazyArgument name, value) = Right (MappyNamedValue name, MappyLambda [] value)
   extend _ = error "TODO: Better error for when a fn has a non-namey name"
 
-take' :: Env -> Expression -> Expression -> (Expression -> M.Map Expression Expression -> Maybe Expression) -> FullyEvaluated
-take' env key map f = do
-  key' <- eval env key
-  map' <- eval env map
-  result <- maybe (singleError $ KeyNotFound key') Right (mapLookup f key' map')
-  eval env result
-    where
-    mapLookup f key' (MappyMap map) = f key' map
-    mapLookup _ _ _ = Nothing
-
-checkAgainstRepeatedDefs :: [Definition] -> Either [Error] [Definition]
+checkAgainstRepeatedDefs :: [Definition] -> Either [Error Expression] [Definition]
 checkAgainstRepeatedDefs defs = go (S.empty, []) defs
   where
   go (_, []) [] = Right defs
@@ -116,7 +101,7 @@ checkAgainstRepeatedDefs defs = go (S.empty, []) defs
 
   newRepeats seen name = (++) (if S.member name seen then [name] else [])
 
-initialEnvironment :: [Definition] -> Either [Error] (Env, Expression)
+initialEnvironment :: [Definition] -> Either [Error Expression] (Env, Expression)
 initialEnvironment = go ([], Nothing)
   where
   go (env, Just m) [] = Right (env, m)

@@ -1,11 +1,12 @@
 module Language.Ast (
   Definition(..)
-  ,Expression(..)
-  ,SugaredDefinition(..)
-  ,SugaredExpression(..)
+  , Expression(..)
+  , PrimitiveMap(..)
+  , SugaredDefinition(..)
+  , SugaredExpression(..)
   ) where
 
-import qualified Data.Map as M
+import Language.Primitives.Map
 
 data SugaredDefinition =
   SugaredFnDefinition Expression [Expression] Expression
@@ -21,7 +22,7 @@ data Definition =
   deriving (Eq, Show, Ord)
 
 data Expression =
-  MappyMap (M.Map Expression Expression)
+  MappyMap (PrimitiveMap Expression)
   | MappyApp Expression [Expression]
   | MappyLambda [Expression] Expression
   | MappyClosure [Expression] Expression [(Expression, Expression)]
