@@ -46,9 +46,12 @@ map f xs = [
 filter p? xs = [
   if [empty? xs]
     nil
-    [if [p? [take :head xs]]
-      [cons [take :head xs] [filter p? [take :tail xs]]]
-      [filter p? [take :tail xs]]]
+    let
+      first = [take :head xs]
+      rest = [take :tail xs]
+    in [if [p? first]
+         [cons first [filter p? rest]]
+         [filter p? rest]]
 ]
 
 silly-list = [cons :a [cons :b nil]]
@@ -74,7 +77,7 @@ cases = [
   cons (:name :map-for-harder-case :assertion [equal? [map silly-fn silly-list] expected-map-list]) [
   cons (:name :filter-for-trivial-case :assertion [equal? [filter always-true silly-list] silly-list]) [
   cons (:name :filter-for-harder-case :assertion [equal? [filter [. not empty?] silly-with-empties-list] silly-list]) [
-  cons (:name :compose-for-trivial-casae :assertion [[. identity identity] true]) [
+  cons (:name :compose-for-trivial-case :assertion [[. identity identity] true]) [
   cons (:name :compose-for-harder-case :assertion [[. not not] true]) nil
 ]]]]]]]]]]]]]]
 

@@ -10,7 +10,7 @@ file :: Parser [Definition]
 file = whiteSpace *> definition `sepEndBy` whiteSpace
 
 expression :: Parser Expression
-expression = map' <|> application <|> lambda <|> keyword <|> namedValue
+expression = specialForm <|> map' <|> application <|> lambda <|> keyword <|> namedValue
 
 definition :: Parser Definition
 definition = do
@@ -31,6 +31,18 @@ functionDefinition name = do
   whiteSpace
   expr <- expression
   return $ DefSugar $ SugaredFnDefinition name names expr
+
+specialForm :: Parser Expression
+specialForm = letExpression
+
+letExpression :: Parser Expression
+letExpression = do
+  try $ (string "let" <* whiteSpace)
+  firstDef <- definition <* whiteSpace
+  restDefs <- manyTill (definition <* whiteSpace) $ string "in"
+  whiteSpace
+  expr <- expression
+  return $ ExprSugar $ SugaredLet (firstDef:restDefs) expr
 
 lazyArgument :: Parser Expression
 lazyArgument = fmap MappyLazyArgument $ char '(' *> optional whiteSpace *> identifier <* optional whiteSpace  <* char ')'

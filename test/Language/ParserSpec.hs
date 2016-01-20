@@ -3,7 +3,7 @@ module Language.ParserSpec (main, spec) where
 import qualified Data.Map as M
 import Data.List (intercalate)
 import Text.ParserCombinators.Parsec (parse)
-import Data.Either (isLeft)
+import Data.Either (isLeft, isRight)
 import Data.Foldable
 
 import Test.Hspec
@@ -83,6 +83,32 @@ spec = do
 
   describe "expression text" $ do
     let parseExpression = parse expression ""
+
+    describe "when parsing a let expression with " $ do
+      let code = "let in :foo"
+
+      it "fails to parse" $ do
+        parseExpression code `shouldSatisfy` isLeft
+
+    describe "when parsing a let expression with multiple cases" $ do
+      let code = "let a = :foo b = :baz c = :bar in [to-foo a b c]"
+
+      it "parses the sugared expression" $ do
+        let
+          (Right (ExprSugar (SugaredLet defs (MappyApp (MappyNamedValue name) args)))) = parseExpression code
+        (length defs, name, length args) `shouldBe` (3, "to-foo", 3)
+
+    describe "when parsing a let expression with one case" $ do
+      let code = "let a = :foo in a"
+
+      it "parses the sugared expression" $ do
+        parseExpression code `shouldBe` (Right $ ExprSugar $ SugaredLet [MappyDef (MappyNamedValue "a") (MappyKeyword "foo")] (MappyNamedValue "a"))
+
+    describe "when parsing a let expression with zero cases" $ do
+      let code = "let in :foo"
+
+      it "fails to parse" $ do
+        parseExpression code `shouldSatisfy` isLeft
 
     describe "when parsing nested lambas" $ do
       it "parses correctly" $ do
