@@ -90,6 +90,28 @@ spec = do
       it "fails to parse" $ do
         parseExpression code `shouldSatisfy` isLeft
 
+    describe "when parsing a list with extraneous whitespace" $ do
+      let code = "(|\t\t   \t\n   \n|)"
+
+      it "parses the sugared expression" $ do
+        parseExpression code `shouldSatisfy` isRight
+
+    describe "when parsing a list with a few values" $ do
+      let code = "(|:foo :bar foo ()|)"
+
+      it "parses the sugared expression" $ do
+        let
+          (Right (ExprSugar (SugaredList exprs))) = parseExpression code
+        exprs `shouldBe` [MappyKeyword "foo", MappyKeyword "bar", MappyNamedValue "foo", MappyMap $ StandardMap M.empty]
+
+    describe "when parsing an empty list" $ do
+      let code = "(||)"
+
+      it "parses the sugared expression" $ do
+        let
+          (Right (ExprSugar (SugaredList exprs))) = parseExpression code
+        exprs `shouldBe` []
+
     describe "when parsing a let expression with multiple cases" $ do
       let code = "let a = :foo b = :baz c = :bar in [to-foo a b c]"
 

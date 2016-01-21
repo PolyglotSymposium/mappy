@@ -64,22 +64,22 @@ expected-filter-list = [cons :c [cons :d nil]]
 
 always-true _ = true
 
-cases = [
-  cons (:name :equal-for-keywords :assertion [equal? :foo :foo]) [
-  cons (:name :equal-for-equal-maps :assertion [equal? two two]) [
-  cons (:name :equal-for-non-equal-maps :assertion [not [equal? zero two]]) [
-  cons (:name :equal-for-functions :assertion [equal? cons cons]) [
-  cons (:name :cons-works :assertion [equal? [cons :foo nil] (:head :foo :tail ())]) [
-  cons (:name :add-works-for-trivial-case :assertion [equal? [add zero two] two]) [
-  cons (:name :add-works-for-harder-case :assertion [equal? [add two two] [succ [succ two]]]) [
-  cons (:name :first-class-functions :assertion [equal? [apply identity :foo] :foo]) [
-  cons (:name :map-for-trivial-case :assertion [equal? [map identity silly-list] silly-list]) [
-  cons (:name :map-for-harder-case :assertion [equal? [map silly-fn silly-list] expected-map-list]) [
-  cons (:name :filter-for-trivial-case :assertion [equal? [filter always-true silly-list] silly-list]) [
-  cons (:name :filter-for-harder-case :assertion [equal? [filter [. not empty?] silly-with-empties-list] silly-list]) [
-  cons (:name :compose-for-trivial-case :assertion [[. identity identity] true]) [
-  cons (:name :compose-for-harder-case :assertion [[. not not] true]) nil
-]]]]]]]]]]]]]]
+cases = (|
+  (:name :equal-for-keywords :assertion [equal? :foo :foo])
+  (:name :equal-for-equal-maps :assertion [equal? two two])
+  (:name :equal-for-non-equal-maps :assertion [not [equal? zero two]])
+  (:name :equal-for-functions :assertion [equal? cons cons])
+  (:name :cons-works :assertion [equal? [cons :foo nil] (:head :foo :tail ())])
+  (:name :add-works-for-trivial-case :assertion [equal? [add zero two] two])
+  (:name :add-works-for-harder-case :assertion [equal? [add two two] [succ [succ two]]])
+  (:name :first-class-functions :assertion [equal? [apply identity :foo] :foo])
+  (:name :map-for-trivial-case :assertion [equal? [map identity silly-list] silly-list])
+  (:name :map-for-harder-case :assertion [equal? [map silly-fn silly-list] expected-map-list])
+  (:name :filter-for-trivial-case :assertion [equal? [filter always-true silly-list] silly-list])
+  (:name :filter-for-harder-case :assertion [equal? [filter [. not empty?] silly-with-empties-list] silly-list])
+  (:name :compose-for-trivial-case :assertion [[. identity identity] true])
+  (:name :compose-for-harder-case :assertion [[. not not] true])
+|)
 
 taking key = \map -> [take key map]
 

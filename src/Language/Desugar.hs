@@ -18,6 +18,8 @@ desugarExpr (ExprSugar (SugaredLet defs body)) =
     body' = desugarExpr body
   in
     defsToLambda defs' body'
+desugarExpr (ExprSugar (SugaredList [])) = MappyNamedValue "nil"
+desugarExpr (ExprSugar (SugaredList (v:vs))) = MappyApp (MappyNamedValue "cons") [desugarExpr v, desugarExpr $ ExprSugar $ SugaredList vs]
 desugarExpr (MappyMap (StandardMap map')) = MappyMap $ StandardMap $ M.fromList $ map go $ M.toList map'
   where
   go (expr1, expr2) = (desugarExpr expr1, desugarExpr expr2)

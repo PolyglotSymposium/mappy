@@ -16,7 +16,7 @@ fullTerm :: Parser a -> Parser a
 fullTerm p = p <* optional whiteSpace <* eof
 
 file :: Parser [Definition]
-file = whiteSpace *> definition `sepEndBy` whiteSpace
+file = whiteSpace *> definition `sepEndBy` whiteSpace <* eof
 
 expression :: Parser Expression
 expression = specialForm <|> map' <|> application <|> lambda <|> keyword <|> namedValue
@@ -42,7 +42,14 @@ functionDefinition name = do
   return $ DefSugar $ SugaredFnDefinition name names expr
 
 specialForm :: Parser Expression
-specialForm = letExpression
+specialForm = letExpression <|> list
+
+list :: Parser Expression
+list = do
+  try $ (string "(|" <* optional whiteSpace)
+  exprs <- expression `sepEndBy` whiteSpace
+  string "|)"
+  return $ ExprSugar $ SugaredList $ exprs
 
 letExpression :: Parser Expression
 letExpression = do
