@@ -12,13 +12,11 @@ defOrExpr :: Parser (Maybe (Either Definition Expression))
 defOrExpr =
   let
     validRepl cons p = Just . cons <$> try (fullTerm p)
+    fullTerm p = whiteSpace *> p <* whiteSpace <* eof
   in
     validRepl Left definition <|>
     validRepl Right expression <|>
     whiteSpace *> eof *> pure Nothing
-
-fullTerm :: Parser a -> Parser a
-fullTerm p = whiteSpace *> p <* whiteSpace <* eof
 
 file :: Parser [Definition]
 file =
