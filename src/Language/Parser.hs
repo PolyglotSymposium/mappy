@@ -9,11 +9,11 @@ parseFile = parse file "(unknown)"
 defOrExpr :: Parser (Maybe (Either Definition Expression))
 defOrExpr =
   Just . Left <$> try (fullTerm definition) <|>
-  Just . Right <$> fullTerm expression <|>
-  eof *> pure Nothing
+  Just . Right <$> try (fullTerm expression) <|>
+  whiteSpace *> eof *> pure Nothing
 
 fullTerm :: Parser a -> Parser a
-fullTerm p = p <* optional whiteSpace <* eof
+fullTerm p = optional whiteSpace *> p <* optional whiteSpace <* eof
 
 file :: Parser [Definition]
 file = whiteSpace *> definition `sepEndBy` whiteSpace <* eof
