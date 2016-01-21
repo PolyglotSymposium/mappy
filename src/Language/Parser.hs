@@ -8,12 +8,15 @@ parseFile = parse file "(unknown)"
 
 defOrExpr :: Parser (Maybe (Either Definition Expression))
 defOrExpr =
-  Just . Left <$> try (fullTerm definition) <|>
-  Just . Right <$> try (fullTerm expression) <|>
-  whiteSpace *> eof *> pure Nothing
+  let
+    validRepl cons p = Just . cons <$> try (fullTerm p)
+  in
+    validRepl Left definition <|>
+    validRepl Right expression <|>
+    whiteSpace *> eof *> pure Nothing
 
 fullTerm :: Parser a -> Parser a
-fullTerm p = optional whiteSpace *> p <* optional whiteSpace <* eof
+fullTerm p = whiteSpace *> p <* whiteSpace <* eof
 
 file :: Parser [Definition]
 file = whiteSpace *> definition `sepEndBy` whiteSpace <* eof
@@ -28,11 +31,7 @@ definition = do
   (valueDefinition name <|> functionDefinition name)
 
 valueDefinition :: Expression -> Parser Definition
-valueDefinition name = do
-  char '='
-  whiteSpace
-  expr <- expression
-  return $ MappyDef name expr
+valueDefinition name = MappyDef name <$> (char '=' *> whiteSpace *> expression)
 
 functionDefinition :: Expression -> Parser Definition
 functionDefinition name = do
@@ -45,11 +44,10 @@ specialForm :: Parser Expression
 specialForm = letExpression <|> list
 
 list :: Parser Expression
-list = do
-  try $ (string "(|" <* optional whiteSpace)
-  exprs <- expression `sepEndBy` whiteSpace
-  string "|)"
-  return $ ExprSugar $ SugaredList $ exprs
+list = ExprSugar . SugaredList <$> between
+  (try $ string "(|" <* whiteSpace)
+  (string "|)")
+  (expression `sepEndBy` whiteSpace)
 
 letExpression :: Parser Expression
 letExpression = do
@@ -61,19 +59,19 @@ letExpression = do
   return $ ExprSugar $ SugaredLet (firstDef:restDefs) expr
 
 lazyArgument :: Parser Expression
-lazyArgument = fmap MappyLazyArgument $ char '(' *> optional whiteSpace *> identifier <* optional whiteSpace  <* char ')'
+lazyArgument = fmap MappyLazyArgument $ char '(' *> whiteSpace *> identifier <* whiteSpace  <* char ')'
 
 lambda :: Parser Expression
 lambda = do
   char '\\'
-  optional whiteSpace
+  whiteSpace
   names <- namesEndingWith $ string "->"
   whiteSpace
   expr <- expression
   return $ MappyLambda names expr
 
 namesEndingWith :: Parser a -> Parser [Expression]
-namesEndingWith end = manyTill ((namedValue <|> lazyArgument) <* whiteSpace) end
+namesEndingWith = manyTill ((namedValue <|> lazyArgument) <* whiteSpace)
 
 pairs :: Parser (M.Map Expression Expression)
 pairs = do
@@ -89,7 +87,7 @@ map' = MappyMap <$> StandardMap <$>
 
 application :: Parser Expression
 application = between (char '[') (char ']') $ do
-    optional whiteSpace
+    whiteSpace
     fn <- (namedValue <|> application)
     whiteSpace
     args <- expression `sepEndBy` whiteSpace
