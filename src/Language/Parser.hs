@@ -4,6 +4,8 @@ import Language.Ast
 import qualified Data.Map as M
 import Text.ParserCombinators.Parsec
 
+import Data.Maybe (catMaybes)
+
 parseFile = parse file "(unknown)"
 
 defOrExpr :: Parser (Maybe (Either Definition Expression))
@@ -19,7 +21,16 @@ fullTerm :: Parser a -> Parser a
 fullTerm p = whiteSpace *> p <* whiteSpace <* eof
 
 file :: Parser [Definition]
-file = whiteSpace *> definition `sepEndBy` whiteSpace <* eof
+file =
+  let
+    validTopLevel = choice [lineComment *> pure Nothing, Just <$> definition]
+    end = eof <|> lineComment
+    fileContents = catMaybes <$> (many $ validTopLevel <* whiteSpace)
+  in
+    whiteSpace *> fileContents <* end
+
+lineComment :: Parser ()
+lineComment = string "--" *> manyTill anyChar (newline *> pure () <|> eof) *> pure ()
 
 expression :: Parser Expression
 expression = specialForm <|> map' <|> application <|> lambda <|> keyword <|> namedValue
@@ -74,12 +85,10 @@ namesEndingWith :: Parser a -> Parser [Expression]
 namesEndingWith = manyTill ((namedValue <|> lazyArgument) <* whiteSpace)
 
 pairs :: Parser (M.Map Expression Expression)
-pairs = do
-  exprs <- expression `sepEndBy` whiteSpace
-  return $ toMap exprs
-    where
-    toMap [] = M.empty
-    toMap (k:v:rest) = M.insert k v $ toMap rest
+pairs = toMap <$> expression `sepEndBy` whiteSpace
+  where
+  toMap [] = M.empty
+  toMap (k:v:rest) = M.insert k v $ toMap rest
 
 map' :: Parser Expression
 map' = MappyMap <$> StandardMap <$>

@@ -44,6 +44,39 @@ spec = do
       it "parses to nothing" $ do
         parseFile "" `shouldBe` Right []
 
+    for_ [
+      ("no newline", "")
+      , ("a newline", "\n")
+      , ("random whitespace, ending with a newline", " \t  \t\t\n")
+      ] $ \(endDesc, end) ->
+      describe ("having " ++ endDesc ++ " at the end") $ do
+        describe "containing just a comment" $ do
+          it "parses to nothing" $ do
+            parseFile ("-- this is a comment" ++ end) `shouldBe` Right []
+
+        describe "containing a definition surrounded by comments" $ do
+          let code = "\n-- this is a comment\na = :foo\n-- another comment" ++ end
+
+          it "parses that definition" $ do
+            parseFile code `shouldBe` Right [MappyDef (MappyNamedValue "a") (MappyKeyword "foo")]
+        describe "containing only multiple comments" $ do
+          let code = "-- this is a comment\n-- another comment" ++ end
+
+          it "parses to nothing" $ do
+            parseFile code `shouldBe` Right []
+
+        describe "containing a definition with a comment on the same line" $ do
+          let code = "a = :bar -- this is a comment" ++ end
+
+          it "parses to nothing" $ do
+            parseFile code `shouldBe` Right [MappyDef (MappyNamedValue "a") (MappyKeyword "bar")]
+
+        describe "containing lots of definitions with comments" $ do
+          let code = "a = :bar\nb = :baz -- this is a comment\n\n-- another comment\n\nc = :quux" ++ end
+
+          it "parses to nothing" $ do
+            parseFile code `shouldBe` Right [MappyDef (MappyNamedValue "a") (MappyKeyword "bar"), MappyDef (MappyNamedValue "b") (MappyKeyword "baz"), MappyDef(MappyNamedValue "c") (MappyKeyword "quux")]
+
     describe "a file beginning with whitespace, having a single definition" $ do
       it "Parses that single definition" $ do
         length <$> parseFile "\n\nid = \\x -> x\n" `shouldBe` Right 1
