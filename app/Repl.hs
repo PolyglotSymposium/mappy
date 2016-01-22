@@ -1,16 +1,23 @@
 module Repl (repl) where
 
+import Paths_mappy
 import System.IO
 import Text.ParserCombinators.Parsec
 
+import Mappy
 import Language.Ast
 import Language.Desugar
 import Language.Error
 import Language.Executor
 import Language.Parser
 
+preludePath :: IO FilePath
+preludePath = getDataFileName "prelude.map"
+
 repl :: IO ()
-repl = repl' (fst <$> initialEnvironment [dummyMain])
+repl = do
+  prelude <- preludePath >>= readMappyFile
+  repl' (fst <$> validatePreExec prelude)
 
 repl' :: Either [Error Expression] Env -> IO ()
 repl' (Left errors) = putStrLn $ show errors
@@ -37,6 +44,3 @@ read' = do
   putStr "m> "
   hFlush stdout
   getLine
-
-dummyMain :: Definition
-dummyMain = MappyDef (MappyNamedValue "main") (MappyKeyword "main")

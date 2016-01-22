@@ -10,7 +10,8 @@ maintainer:          example@example.com
 copyright:           2010 Author Here
 category:            Web
 build-type:          Simple
--- extra-source-files:
+data-dir:            prelude
+data-files:          prelude.map
 cabal-version:       >=1.10
 
 library

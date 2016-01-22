@@ -15,11 +15,15 @@ import Language.Primitives.Map as PM
 type FullyEvaluated = Either [Error Expression] Expression
 type Env = [(Expression, Expression)]
 
-exec :: [Definition] -> FullyEvaluated
-exec defs = do
+validatePreExec :: [Definition] -> Either [Error Expression] (Env, Expression)
+validatePreExec defs = do
   let desugaredDefs = map desugarEachDef defs
   checkAgainstRepeatedDefs desugaredDefs
-  (env, mainExpr) <- initialEnvironment desugaredDefs
+  initialEnvironment desugaredDefs
+
+exec :: [Definition] -> FullyEvaluated
+exec defs = do
+  (env, mainExpr) <- validatePreExec defs
   eval env mainExpr
 
 eval :: Env -> Expression -> FullyEvaluated

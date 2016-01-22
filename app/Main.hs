@@ -4,7 +4,6 @@ import Mappy
 import Repl
 import Language.Ast
 import Language.Executor
-import Language.Parser
 
 import System.Environment (getArgs)
 
@@ -12,11 +11,6 @@ main :: IO ()
 main = do
   args <- getArgs
   case args of
-    [fileName] -> do
-      contents <- readFile fileName
-      case parseFile contents of
-        Left e -> print e
-        Right decls -> case exec decls of
-          Left e -> print e
-          Right expr -> putStrLn ("Program returned: " ++ pretty expr)
+    [fileName] ->
+      readMappyFile fileName >>= either print (putStrLn . pretty) . exec
     [] -> repl

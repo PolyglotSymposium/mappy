@@ -6,7 +6,7 @@ import Text.ParserCombinators.Parsec
 
 import Data.Maybe (catMaybes)
 
-parseFile = parse file "(unknown)"
+parseFile = parse file "Error parsing file"
 
 defOrExpr :: Parser (Maybe (Either Definition Expression))
 defOrExpr =
