@@ -44,6 +44,25 @@ first one.
 
 Functions can have [lazy arguments](#lazy-arguments)
 
+### Let expressions
+mappy has ML-esque let expressions. For example, here's how [`filter`](https://en.wikipedia.org/wiki/Filter_(higher-order_function)#Example)
+is defined
+```
+filter p? xs = [
+  if [empty? xs]
+    nil
+    let
+      first = [take :head xs]
+      rest = [take :tail xs]
+    in
+      [if [p? first]
+       [cons first [filter p? rest]]
+       [filter p? rest]
+      ]
+]
+```
+Note that let expressions are just syntactic sugar over nested lambdas.
+
 ### Applying functions
 To apply functions, use square brackets, e.g.
 ```
@@ -107,6 +126,14 @@ A map containing maps
 )
 ```
 Note that, like in Clojure, commas are parsed as whitespace in mappy.
+
+### Lists
+Lists are really just a special form of [maps](#maps). Because of this, there's
+another sugar to handle them using the `(|` and `|)` delimiters. For, example
+here's a list of some keywords
+```
+(|:a :b :c :d :e|)
+```
 
 ## Core primitives
 Like LISP, mappy is built around a small set of core primitives. mappy's core
