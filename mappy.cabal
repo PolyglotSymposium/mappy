@@ -8,7 +8,7 @@ license-file:        LICENSE
 author:              Michael Gilliland
 maintainer:          mjg.py3@gmail.com
 copyright:           2015 Michael Gilliland
-category:            Programming Language
+category:            Compilers/Interpreters
 build-type:          Simple
 data-dir:            prelude
 data-files:          prelude.map
