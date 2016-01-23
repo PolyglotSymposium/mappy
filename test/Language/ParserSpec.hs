@@ -19,7 +19,7 @@ data ArbitraryValidKeywordName =
 
 instance Arbitrary ArbitraryValidKeywordName where
   arbitrary = do
-    let validChars = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "_/-+<>!@#$%^&*;'\",.?="
+    let validChars = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "_/-+<>!@#$%^&*;'\".?="
     text <- arbitrary
     firstChar <- elements validChars
     let filtered = filter (`elem` validChars) text
@@ -40,9 +40,13 @@ spec = do
   describe "code files" $ do
     let parseFile = parse file ""
 
-    describe "the empty file" $ do
-      it "parses to nothing" $ do
-        parseFile "" `shouldBe` Right []
+    for_ [
+      ("the empty file", "")
+      , ("a file filled with a bunch of commas and whitespace", "\t,,,\t\t\n    ,,, ,, ,,,")
+      ] $ \(fileDescription, fileText) ->
+      describe fileDescription $ do
+        it "parses to nothing" $ do
+          parseFile fileText `shouldBe` Right []
 
     for_ [
       ("no newline", "")
@@ -272,6 +276,12 @@ spec = do
         describe "a single association of a map to a keyword" $ do
           it "parses correctly" $ do
             parseExpression "(() :foobar)" `shouldBe` Right (MappyMap $ StandardMap $ M.singleton (MappyMap $ StandardMap $ M.empty) (MappyKeyword "foobar"))
+
+        describe "associations that are comma separated" $ do
+          it "ignores the commas as whitespace" $ do
+            let (Right (MappyMap (StandardMap map'))) = parseExpression "(:a :b, :c :d, :e :f)"
+
+            (map snd $ M.toList map') `shouldBe` [MappyKeyword "b", MappyKeyword "d", MappyKeyword "f"]
 
     describe "a single keyword" $ do
       it "parses correctly" $ do

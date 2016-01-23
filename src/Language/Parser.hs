@@ -101,7 +101,7 @@ application = between (char '[') (char ']') $ do
     return $ MappyApp fn args
 
 identifier :: Parser String
-identifier = many1 $ letter <|> digit <|> oneOf "_/-+<>!@#$%^&*;'\",.?="
+identifier = many1 $ letter <|> digit <|> oneOf "_/-+<>!@#$%^&*;'\".?="
 
 keyword :: Parser Expression
 keyword = char ':' >> (MappyKeyword <$> identifier)
@@ -110,4 +110,4 @@ namedValue :: Parser Expression
 namedValue = MappyNamedValue <$> identifier
 
 whiteSpace :: Parser String
-whiteSpace = many (oneOf " \n\r\t") <?> "whitespace"
+whiteSpace = many (oneOf " \n\r\t,") <?> "whitespace"
