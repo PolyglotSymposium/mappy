@@ -1,4 +1,5 @@
 # Mappy
+[![Build Status](https://travis-ci.org/PolyglotSymposium/mappy.svg?branch=master)](https://travis-ci.org/PolyglotSymposium/mappy)
 
 A toy programming language. Like LISP but with with lotsa maps.
 

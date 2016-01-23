@@ -27,6 +27,8 @@ two = [succ [succ zero]]
 
 identity a = a
 
+const a = \_ -> a
+
 . f g = \x -> [f [g x]]
 
 nil = ()
