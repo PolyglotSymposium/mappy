@@ -22,7 +22,7 @@ mappy source file (ensure it has a `main` function defined). For example, to
 run the [prelude](prelude/prelude.map), run
 ```
 mappy prelude/prelude.map
-``
+```
 
 ## Grammar
 For less contrived examples, see the [prelude](prelude/prelude.map).
