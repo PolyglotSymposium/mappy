@@ -1,14 +1,14 @@
 name:                mappy
 version:             0.1.0.0
-synopsis:            Initial project template from stack, using hspec and quickcheck
+synopsis:            A functional programming language. Like LISP but focused around maps rather than lists.
 description:         Please see README.md
 homepage:            http://github.com/githubuser/mappy#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2010 Author Here
-category:            Web
+author:              Michael Gilliland
+maintainer:          mjg.py3@gmail.com
+copyright:           2015 Michael Gilliland
+category:            Programming Language
 build-type:          Simple
 data-dir:            prelude
 data-files:          prelude.map
