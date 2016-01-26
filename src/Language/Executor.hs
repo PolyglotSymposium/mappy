@@ -52,14 +52,16 @@ apply = apply'
 apply' :: Env -> Expression -> [Expression] -> FullyEvaluated
 apply' env (MappyNamedValue "take") (key:map:[]) = do
   key' <- eval env key
-  (MappyMap map') <- eval env map
+  maybeMap <- eval env map
+  (MappyMap map') <- assertMap "take" key' maybeMap
   maybe (singleError $ KeyNotFound key') Right $ PM.lookup key' map'
 apply' env (MappyNamedValue "take") args =
   singleError $ WrongNumberOfArguments "take" 2 $ length args
 apply' env (MappyNamedValue "default-take") (key:map:def:[]) = do
   key' <- eval env key
   def' <- eval env def
-  (MappyMap map') <- eval env map
+  maybeMap <- eval env map
+  (MappyMap map') <- assertMap "default-take" key' maybeMap
   return $ PM.findWithDefault def' key' map'
 apply' env (MappyNamedValue "default-take") args =
   singleError $ WrongNumberOfArguments "default-take" 3 $ length args
@@ -83,6 +85,9 @@ applyNonPrim args _ (MappyClosure argNames body closedEnv) = do
 
 applyNonPrim args env kwd@(MappyKeyword _) =
   eval env $ MappyApp (MappyNamedValue "take") (kwd:args)
+
+assertMap _ _ map@(MappyMap _) = Right map
+assertMap fn key nonMap = Left [TakeCalledOnNonMap fn key nonMap]
 
 extendEnvironment :: [Expression] -> [Expression] -> Env -> Either [Error Expression] Env
 extendEnvironment argNames args env =

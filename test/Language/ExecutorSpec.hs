@@ -43,12 +43,17 @@ spec = do
 
     describe "the application of a keyword" $ do
       let
-        code = [
-          def_main $ MappyApp (MappyKeyword "a") [MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")]
+        map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+        code appliedTo = [
+          def_main $ MappyApp (MappyKeyword "a") [appliedTo]
           ]
 
       it "applies as `take` applies" $ do
-        exec code `shouldBe` Right (MappyKeyword "b")
+        exec (code map) `shouldBe` Right (MappyKeyword "b")
+
+      describe "to a non-map" $ do
+        it "errors" $ do
+          exec (code $ MappyKeyword "b") `shouldBe` (Left [TakeCalledOnNonMap "take" (MappyKeyword "a") (MappyKeyword "b")])
 
     describe "the application of a lambda" $ do
       let
@@ -123,6 +128,11 @@ spec = do
           exec code `shouldBe` Left [GiveCalledOnNonMap (MappyKeyword "a") (MappyKeyword "b") (MappyKeyword "c")]
 
     describe "default-take" $ do
+      describe "given a non-map as the second argument" $ do
+        let code = [def_main $ MappyApp (MappyNamedValue "default-take") [MappyKeyword "a", MappyKeyword "b", MappyKeyword "c"]]
+
+        it "errors" $ do
+          exec code `shouldBe` (Left [TakeCalledOnNonMap "default-take" (MappyKeyword "a") (MappyKeyword "b")])
       describe "given a map with an erroring default value" $ do
         let
           code lookup = [
