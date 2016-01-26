@@ -1,6 +1,6 @@
 module Language.Primitives.Map where
 
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 
 import Language.Primitives.Io
 import Language.Primitives.IoAble

@@ -1,6 +1,6 @@
 module Language.ParserSpec (main, spec) where
 
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import Data.List (intercalate)
 import Text.ParserCombinators.Parsec (parse)
 import Data.Either (isLeft, isRight)

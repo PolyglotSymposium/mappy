@@ -3,7 +3,7 @@ module Language.AstExamples where
 import Language.Ast
 import Language.Primitives.Map
 
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 
 if_def =
   (MappyDef

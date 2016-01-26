@@ -8,7 +8,7 @@ module Language.Ast (
   ) where
 
 import Data.List (intercalate)
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 
 import Language.Primitives.IoAble
 import Language.Primitives.Map

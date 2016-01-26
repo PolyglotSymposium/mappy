@@ -2,7 +2,7 @@ module Language.Desugar where
 
 import Language.Ast
 
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 
 desugarEachDef  :: Definition -> Definition
 desugarEachDef (DefSugar sugared) = desugarDef sugared

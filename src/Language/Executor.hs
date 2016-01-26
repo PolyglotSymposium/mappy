@@ -2,7 +2,7 @@ module Language.Executor where
 
 import Debug.Trace
 import qualified Data.Either as E
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import Control.Monad (liftM2)
 

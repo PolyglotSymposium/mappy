@@ -1,7 +1,7 @@
 module Language.Parser where
 
 import Language.Ast
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import Text.ParserCombinators.Parsec
 
 import Data.Maybe (catMaybes)

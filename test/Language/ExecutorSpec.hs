@@ -7,7 +7,7 @@ import Language.AstExamples
 import Language.Error
 import Language.Executor
 
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 
 simple_def name val = MappyDef (MappyNamedValue name) (MappyKeyword val)
 def_main = MappyDef (MappyNamedValue "main")
