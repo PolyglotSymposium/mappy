@@ -25,6 +25,51 @@ run the [prelude](prelude/prelude.map), run
 mappy prelude/prelude.map
 ```
 
+## Values
+For less contrived examples, see the [prelude](prelude/prelude.map).
+
+### keywords
+Keywords are names in mappy that always evaluate to themselves. Keywords begin
+with `:` and can have a wide range of values, for example, the following are
+keywords
+
+ - `:i-am-a-keyword`
+ - `:----->`
+ - `:KeywordHmmmm`
+ - `:/`
+
+Keywords are primarily useful for naming things, like keys in a map.
+
+### Maps
+The primary value in mappy is the map (a la Hash in Ruby, HashMap in Java,
+etc...). To define a map, surround key value pairs with parenthesis.
+
+#### Examples
+The empty map
+```
+()
+```
+
+A map containing maps
+```
+(
+  :type :person,
+  :job (
+    :title :hacker-pro,
+    :salary :infinity
+  )
+)
+```
+Note that, like in Clojure, commas are parsed as whitespace in mappy.
+
+### Lists
+Lists are really just a special form of [maps](#maps). Because of this, there's
+another sugar to handle them using the `(|` and `|)` delimiters. For, example
+here's a list of some keywords
+```
+(|:a :b :c :d :e|)
+```
+
 ## Grammar
 For less contrived examples, see the [prelude](prelude/prelude.map).
 
@@ -90,51 +135,6 @@ if cond (then) (else) = [[
 ```
 the `[[` and `]]` are not special, they are normal function application. In
 this case, they apply `default-take` then the result (either `else` or `then`).
-
-## Values
-For less contrived examples, see the [prelude](prelude/prelude.map).
-
-### keywords
-Keywords are names in mappy that always evaluate to themselves. Keywords begin
-with `:` and can have a wide range of values, for example, the following are
-keywords
-
- - `:i-am-a-keyword`
- - `:----->`
- - `:KeywordHmmmm`
- - `:/`
-
-Keywords are primarily useful for naming things, like keys in a map.
-
-### Maps
-The primary value in mappy is the map (a la Hash in Ruby, HashMap in Java,
-etc...). To define a map, surround key value pairs with parenthesis.
-
-#### Examples
-The empty map
-```
-()
-```
-
-A map containing maps
-```
-(
-  :type :person,
-  :job (
-    :title :hacker-pro,
-    :salary :infinity
-  )
-)
-```
-Note that, like in Clojure, commas are parsed as whitespace in mappy.
-
-### Lists
-Lists are really just a special form of [maps](#maps). Because of this, there's
-another sugar to handle them using the `(|` and `|)` delimiters. For, example
-here's a list of some keywords
-```
-(|:a :b :c :d :e|)
-```
 
 ## Core primitives
 Like LISP, mappy is built around a small set of core primitives. mappy's core
