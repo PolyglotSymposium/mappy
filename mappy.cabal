@@ -54,4 +54,4 @@ test-suite mappy-test
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/mappy
+  location: https://github.com/PolyglotSymposium/mappy
