@@ -41,6 +41,15 @@ spec = do
       it "reduces until the final value" $ do
         exec code `shouldBe` Right (MappyKeyword "c")
 
+    describe "the application of a keyword" $ do
+      let
+        code = [
+          def_main $ MappyApp (MappyKeyword "a") [MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")]
+          ]
+
+      it "applies as `take` applies" $ do
+        exec code `shouldBe` Right (MappyKeyword "b")
+
     describe "the application of a lambda" $ do
       let
         code = [

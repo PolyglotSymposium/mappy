@@ -163,6 +163,12 @@ Example:
 
 returns: `:bar`
 
+More simply, applying a keyword to a map is the same as applying `take`. For
+example, the above example can be rewritten as
+```
+[:foo (:foo :bar)]
+```
+
 ### `default-take`
 Like `take` except, instead of erring, it returns a default value if the key is
 not found.

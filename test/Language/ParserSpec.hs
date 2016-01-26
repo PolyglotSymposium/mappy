@@ -231,6 +231,11 @@ spec = do
             parseExpression ("\\x -> " ++ body) `shouldBe` Right (MappyLambda [MappyNamedValue "x"] expected)
 
     describe "when parsing function applications" $ do
+      describe "where the function is a keyword" $ do
+        it "parses correctly" $ do
+          property $ \(ValidIdentifier name) ->
+            parseExpression ("[:" ++ name ++ " foo]") `shouldBe` Right (MappyApp (MappyKeyword name) [MappyNamedValue "foo"])
+
       describe "with an application where the fn is returned by an another application" $ do
         it "parses correctly" $ do
           property $ \(ValidIdentifier name) ->

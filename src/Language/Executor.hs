@@ -74,9 +74,15 @@ apply' env (MappyNamedValue "give") (key:value:map:[]) = do
 apply' env (MappyNamedValue "give") args =
   singleError $ WrongNumberOfArguments "give" 3 $ length args
 apply' env nonPrimitive args = do
-  (MappyClosure argNames body closedEnv) <- eval env nonPrimitive
+  val <- eval env nonPrimitive
+  applyNonPrim args env val
+
+applyNonPrim args _ (MappyClosure argNames body closedEnv) = do
   env' <- extendEnvironment argNames args closedEnv
   eval env' body
+
+applyNonPrim args env kwd@(MappyKeyword _) =
+  eval env $ MappyApp (MappyNamedValue "take") (kwd:args)
 
 extendEnvironment :: [Expression] -> [Expression] -> Env -> Either [Error Expression] Env
 extendEnvironment argNames args env =
