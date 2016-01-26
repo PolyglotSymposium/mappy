@@ -17,7 +17,9 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
                      , src/Language
+                     , app
   exposed-modules:     Mappy
+                     , Repl
                      , Language.Ast
                      , Language.Desugar
                      , Language.Error
