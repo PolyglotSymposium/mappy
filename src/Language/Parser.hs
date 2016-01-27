@@ -83,7 +83,11 @@ namesEndingWith :: Parser a -> Parser [Expression]
 namesEndingWith = manyTill ((namedValue <|> lazyArgument) <* whiteSpace)
 
 pairs :: Parser (M.Map Expression Expression)
-pairs = toMap <$> expression `sepEndBy` whiteSpace
+pairs = do
+  ps <- expression `sepEndBy` whiteSpace
+  if even $ length ps
+     then pure $ toMap ps
+     else unexpected "odd number of values in literal map"
   where
   toMap [] = M.empty
   toMap (k:v:rest) = M.insert k v $ toMap rest
