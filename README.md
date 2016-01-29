@@ -6,7 +6,13 @@ A functional programming language. Like LISP but focused around maps rather
 than lists.
 
 ## Installing
-To install, use [stack](http://docs.haskellstack.org/en/stable/README.html)
+To install, use cabal
+```
+cabal install mappy
+```
+
+## Installing from source
+To build install from source, use [stack](http://docs.haskellstack.org/en/stable/README.html)
 ```
 stack install
 ```
