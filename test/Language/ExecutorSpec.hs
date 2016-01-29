@@ -89,6 +89,12 @@ spec = do
           exec code `shouldBe` Right (MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"))
 
     describe "give" $ do
+      describe "given undefined arguments" $ do
+        let code = [def_main $ MappyApp (MappyNamedValue "give") [MappyNamedValue "a", MappyNamedValue "b", MappyNamedValue "c"]]
+
+        it "returns an error for each argument" $ do
+          exec code `shouldBe` Left (map NameNotDefined ["a", "b", "c"])
+
       describe "given the wrong number of arguments" $ do
         let
           code = [
@@ -128,6 +134,12 @@ spec = do
           exec code `shouldBe` Left [GiveCalledOnNonMap (MappyKeyword "a") (MappyKeyword "b") (MappyKeyword "c")]
 
     describe "default-take" $ do
+      describe "given undefined arguments" $ do
+        let code = [def_main $ MappyApp (MappyNamedValue "default-take") [MappyNamedValue "a", MappyNamedValue "b", MappyNamedValue "c"]]
+
+        it "returns an error for each argument" $ do
+          exec code `shouldBe` Left (map NameNotDefined ["a", "b", "c"])
+
       describe "given a non-map as the second argument" $ do
         let code = [def_main $ MappyApp (MappyNamedValue "default-take") [MappyKeyword "a", MappyKeyword "b", MappyKeyword "c"]]
 
@@ -195,6 +207,12 @@ spec = do
           exec code `shouldBe` Right (MappyKeyword "b")
 
     describe "take" $ do
+      describe "given undefined arguments" $ do
+        let code = [def_main $ MappyApp (MappyNamedValue "take") [MappyNamedValue "a", MappyNamedValue "b"]]
+
+        it "returns an error for each argument" $ do
+          exec code `shouldBe` Left (map NameNotDefined ["a", "b"])
+
       describe "given the wrong number of arguments" $ do
         let
           map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
