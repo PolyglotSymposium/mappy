@@ -1,6 +1,5 @@
 module Language.Executor where
 
-import Debug.Trace
 import qualified Data.Either as E
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
@@ -18,8 +17,7 @@ type Env = [(Expression, Expression)]
 validatePreExec :: [Definition] -> Either [Error Expression] (Env, Expression)
 validatePreExec defs = do
   let desugaredDefs = map desugarEachDef defs
-  checkAgainstRepeatedDefs desugaredDefs
-  initialEnvironment desugaredDefs
+  checkAgainstRepeatedDefs desugaredDefs >>= initialEnvironment
 
 exec :: [Definition] -> FullyEvaluated Expression
 exec defs = do
@@ -37,55 +35,57 @@ eval env (MappyMap map') = evalMap (eval env) map'
 eval _ value = Right value
 
 evalMap :: (Expression -> FullyEvaluated Expression) -> PrimitiveMap Expression -> FullyEvaluated Expression
-evalMap evaluator (StandardMap map) = go [] (M.toList map)
+evalMap evaluator (StandardMap map') = go [] (M.toList map')
   where
   go pairs [] = Right $ MappyMap $ StandardMap $ M.fromList pairs
   go pairs ((key, value):rest) = do
     key' <- evaluator key
     value' <- evaluator value
     go ((key', value'):pairs) rest
-evalMap _ map = Right $ MappyMap $ map
+evalMap _ map' = Right $ MappyMap $ map'
 
 apply :: Env -> Expression -> [Expression] -> FullyEvaluated Expression
 apply = apply'
 
 apply' :: Env -> Expression -> [Expression] -> FullyEvaluated Expression
-apply' env (MappyNamedValue "take") (key:map:[]) = do
-  [key', maybeMap] <- evalAll env [key, map]
-  (MappyMap map') <- assertMap "take" key' maybeMap
-  maybe (singleError $ KeyNotFound key') Right $ PM.lookup key' map'
-apply' env (MappyNamedValue "take") args =
+apply' env (MappyNamedValue "take") (key:map':[]) = do
+  [key', maybeMap] <- evalAll env [key, map']
+  (MappyMap map'') <- assertMap "take" key' maybeMap
+  maybe (singleError $ KeyNotFound key') Right $ PM.lookup key' map''
+apply' _ (MappyNamedValue "take") args =
   singleError $ WrongNumberOfArguments "take" 2 $ length args
-apply' env (MappyNamedValue "default-take") (key:map:def:[]) = do
-  [key', maybeMap, def'] <- evalAll env [key, map, def]
-  (MappyMap map') <- assertMap "default-take" key' maybeMap
-  return $ PM.findWithDefault def' key' map'
-apply' env (MappyNamedValue "default-take") args =
+apply' env (MappyNamedValue "default-take") (key:map':def:[]) = do
+  [key', maybeMap, def'] <- evalAll env [key, map', def]
+  (MappyMap map'') <- assertMap "default-take" key' maybeMap
+  return $ PM.findWithDefault def' key' map''
+apply' _ (MappyNamedValue "default-take") args =
   singleError $ WrongNumberOfArguments "default-take" 3 $ length args
-apply' env (MappyNamedValue "give") (key:value:map:[]) = do
-  [key', value', map'] <- evalAll env [key, value, map]
-  maybe (singleError $ GiveCalledOnNonMap key value' map') Right (mapInsert key' value' map')
+apply' env (MappyNamedValue "give") (key:value:map':[]) = do
+  [key', value', map''] <- evalAll env [key, value, map']
+  maybe (singleError $ GiveCalledOnNonMap key value' map'') Right (mapInsert key' value' map'')
     where
-    mapInsert k v (MappyMap map) = Just $ MappyMap $ PM.insert k v map
+    mapInsert k v (MappyMap m) = Just $ MappyMap $ PM.insert k v m
     mapInsert _ _ _ = Nothing
-apply' env (MappyNamedValue "give") args =
+apply' _ (MappyNamedValue "give") args =
   singleError $ WrongNumberOfArguments "give" 3 $ length args
 apply' env nonPrimitive args =
   eval env nonPrimitive >>= applyNonPrim args env
 
+applyNonPrim :: [Expression] -> Env -> Expression -> FullyEvaluated Expression
 applyNonPrim args _ (MappyClosure argNames body closedEnv) = do
   env' <- extendEnvironment argNames args closedEnv
   eval env' body
-
 applyNonPrim args env kwd@(MappyKeyword _) =
   eval env $ MappyApp (MappyNamedValue "take") (kwd:args)
+applyNonPrim _ _ _ = error "TODO: #40"
 
 evalAll :: Env -> [Expression] -> FullyEvaluated [Expression]
 evalAll env exprs = case E.partitionEithers $ map (eval env) exprs of
   ([], values) -> Right values
   (errors, _) -> Left $ concat errors
 
-assertMap _ _ map@(MappyMap _) = Right map
+assertMap :: String -> Expression -> Expression -> FullyEvaluated Expression
+assertMap _ _ m@(MappyMap _) = Right m
 assertMap fn key nonMap = Left [TakeCalledOnNonMap fn key nonMap]
 
 extendEnvironment :: [Expression] -> [Expression] -> Env -> Either [Error Expression] Env
@@ -99,7 +99,7 @@ extendEnvironment argNames args env =
   in
     (liftM2 (++)) (final partitioned) (pure env)
   where
-  final ([], env) = Right env
+  final ([], env') = Right env'
   final (errors, _) = Left $ concat errors
   extend (MappyNamedValue name, value) = do
     v' <- eval env value
@@ -113,6 +113,7 @@ checkAgainstRepeatedDefs defs = go (S.empty, []) defs
   go (_, []) [] = Right defs
   go (_, repeats) [] = Left $ map RepeatedDefinition repeats
   go (seen, repeats) ((MappyDef (MappyNamedValue name) _):rest) = go (S.insert name seen, newRepeats seen name repeats) rest
+  go _ _ = error "def constructed with unexpected values"
 
   newRepeats seen name = (++) (if S.member name seen then [name] else [])
 
@@ -123,3 +124,4 @@ initialEnvironment = go ([], Nothing)
   go (_, Nothing) [] = singleError MainNotFound
   go (env, _) (MappyDef (MappyNamedValue "main") mainBody:rest) = go (env, Just mainBody) rest
   go (env, maybeMain) (MappyDef name body:rest) = go ((name, body):env, maybeMain) rest
+  go _ _ = error "Sugared def escaped into execution"
