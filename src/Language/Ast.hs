@@ -7,6 +7,7 @@ module Language.Ast (
   , pretty
   ) where
 
+import Data.Char (chr)
 import Data.List (intercalate)
 import qualified Data.Map.Strict as M
 
@@ -48,7 +49,17 @@ pretty :: Expression -> String
 pretty (MappyKeyword name) = ':':name
 pretty (MappyNamedValue name) = name
 pretty (MappyApp fn args) = "[" ++ intercalate " " (pretty fn:map pretty args) ++ "]"
-pretty (MappyMap (StandardMap map')) = "(" ++ intercalate " " (map (\(k, v) -> pretty k ++ " " ++ pretty v) $ M.toList map') ++ ")"
+pretty mm@(MappyMap (StandardMap map')) =
+  case M.lookup (MappyKeyword "__type") map' of
+    Just (MappyKeyword "char") -> "'" ++ [chr $ keyDepth mm $ MappyKeyword "pred"] ++ "'"
+    Nothing -> "(" ++ intercalate " " (map (\(k, v) -> pretty k ++ " " ++ pretty v) $ M.toList map') ++ ")"
 pretty (MappyMap (IoMap _)) = "__prim_io_map"
 pretty (MappyLambda args body) = "\\" ++ intercalate " " (map pretty args) ++ " -> " ++ pretty body
 pretty (MappyClosure args body _) = "#closure[...]#" ++ pretty (MappyLambda args body)
+
+keyDepth :: Expression -> Expression -> Int
+keyDepth (MappyMap (StandardMap map')) key =
+  case M.lookup key map' of
+    Just next -> 1 + keyDepth next key
+    Nothing -> 0
+keyDepth _ _ = error "keyDepth called on non-map"
