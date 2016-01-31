@@ -5,7 +5,22 @@ import Test.Hspec
 import Language.Ast
 import Language.Desugar
 
+import Data.Map.Strict as M
+
 cons e r = MappyApp (MappyNamedValue "cons") [e, r]
+
+hasKeyAllTheWayDown (MappyMap (StandardMap map)) key value nextKey =
+  let
+    hasKey = M.lookup key map == Just value
+  in
+    case M.lookup nextKey map of
+      Just next -> hasKey && hasKeyAllTheWayDown next key value nextKey
+      Nothing -> hasKey
+
+hasDepthDownKey (MappyMap (StandardMap map)) depth nextKey =
+  case M.lookup nextKey map of
+    Just next -> hasDepthDownKey next (depth - 1) nextKey
+    Nothing -> depth == 0
 
 spec :: Spec
 spec = do
@@ -21,6 +36,17 @@ spec = do
         desugarDef def `shouldBe` MappyDef fnName (MappyLambda argNames body)
 
   describe "desugarExpr" $ do
+    describe "given a character" $ do
+      let
+        char = ExprSugar $ SugaredChar $ '0'
+        desugared = desugarExpr char
+
+      it "desugars as a nat, with the same value" $ do
+        hasDepthDownKey desugared 48 (MappyKeyword "pred") `shouldBe` True
+
+      it "desugars as a nat, with the :__type :char key all the way down" $ do
+        hasKeyAllTheWayDown desugared (MappyKeyword "__type") (MappyKeyword "char") (MappyKeyword "pred") `shouldBe` True
+
     describe "given an empty sugared list" $ do
       let code = ExprSugar $ SugaredList []
 

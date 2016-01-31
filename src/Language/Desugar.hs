@@ -2,6 +2,7 @@ module Language.Desugar where
 
 import Language.Ast
 
+import Data.Char (ord)
 import qualified Data.Map.Strict as M
 
 desugarEachDef  :: Definition -> Definition
@@ -19,13 +20,20 @@ desugarExpr (ExprSugar (SugaredLet defs body)) =
   in
     defsToLambda defs' body'
 desugarExpr (ExprSugar (SugaredList [])) = MappyNamedValue "nil"
-desugarExpr (ExprSugar (SugaredList (v:vs))) = MappyApp (MappyNamedValue "cons") [desugarExpr v, desugarExpr $ ExprSugar $ SugaredList vs]
+desugarExpr (ExprSugar (SugaredList (v:vs))) =
+  MappyApp (MappyNamedValue "cons") [desugarExpr v, desugarExpr $ ExprSugar $ SugaredList vs]
+desugarExpr (ExprSugar (SugaredChar c)) =
+    mappyNat (ord c) $ M.singleton (MappyKeyword "__type") (MappyKeyword "char")
 desugarExpr (MappyMap (StandardMap map')) = MappyMap $ StandardMap $ M.fromList $ map go $ M.toList map'
   where
   go (expr1, expr2) = (desugarExpr expr1, desugarExpr expr2)
 desugarExpr (MappyApp fn args) = MappyApp (desugarExpr fn) $ map desugarExpr args
 desugarExpr (MappyLambda args body) = MappyLambda (map desugarExpr args) $ desugarExpr body
 desugarExpr expr = expr
+
+mappyNat :: Int -> M.Map Expression Expression -> Expression
+mappyNat 0 extra = MappyMap $ StandardMap $ extra
+mappyNat n extra = MappyMap $ StandardMap $ M.insert (MappyKeyword "pred") (mappyNat (n -1 ) extra) extra
 
 defsToLambda :: [Definition] -> Expression -> Expression
 defsToLambda [] expr =

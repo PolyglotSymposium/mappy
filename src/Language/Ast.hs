@@ -20,6 +20,7 @@ data SugaredDefinition =
 data SugaredExpression =
   SugaredLet [Definition] Expression
   | SugaredList [Expression]
+  | SugaredChar Char
   deriving (Eq, Show, Ord)
 
 data Definition =

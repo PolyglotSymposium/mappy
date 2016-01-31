@@ -19,7 +19,7 @@ data ArbitraryValidKeywordName =
 
 instance Arbitrary ArbitraryValidKeywordName where
   arbitrary = do
-    let validChars = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "_/-+<>!@#$%^&*;'\".?="
+    let validChars = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "_/-+<>!@#$%^&*;\".?="
     text <- arbitrary
     firstChar <- elements validChars
     let filtered = filter (`elem` validChars) text
@@ -160,7 +160,19 @@ spec = do
   describe "expression text" $ do
     let parseExpression = parse expression ""
 
-    describe "when parsing a let expression with " $ do
+    for_ [
+        ("'a'", 'a')
+      , ("'0'", '0')
+      , ("'_'", '_')
+      , ("'\\n'", '\n')
+      , ("'\\t'", '\t')
+      , ("'\\\\'", '\\')
+      ] $ \(char, expected) ->
+      describe ("when parsing a character " ++ char) $ do
+        it "parses the sugared expression" $ do
+          parseExpression char `shouldBe` (Right $ ExprSugar $ SugaredChar expected)
+
+    describe "when parsing a let expression with no definitions" $ do
       let code = "let in :foo"
 
       it "fails to parse" $ do

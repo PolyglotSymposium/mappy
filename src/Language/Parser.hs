@@ -1,5 +1,6 @@
 module Language.Parser where
 
+import Debug.Trace
 import Language.Ast
 import qualified Data.Map.Strict as M
 import Text.ParserCombinators.Parsec
@@ -51,7 +52,15 @@ functionDefinition name = do
   return $ DefSugar $ SugaredFnDefinition name names expr
 
 specialForm :: Parser Expression
-specialForm = letExpression <|> list
+specialForm = letExpression <|> list <|> character
+
+character :: Parser Expression
+character = ExprSugar . SugaredChar <$> (char '\'' *> (escapedChar <|> anyChar) <* char '\'')
+  where
+  escapedChar = do
+    b <- char '\\'
+    c <- anyChar
+    return $ read $ '\'':b:c:"'"
 
 list :: Parser Expression
 list = ExprSugar . SugaredList <$> between
@@ -107,7 +116,7 @@ application = between (char '[') (char ']') $ do
     return $ MappyApp fn args
 
 identifier :: Parser String
-identifier = many1 $ letter <|> digit <|> oneOf "_/-+<>!@#$%^&*;'\".?="
+identifier = many1 $ letter <|> digit <|> oneOf "_/-+<>!@#$%^&*;\".?="
 
 keyword :: Parser Expression
 keyword = char ':' >> (MappyKeyword <$> identifier)
