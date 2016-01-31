@@ -6,6 +6,7 @@ import Text.ParserCombinators.Parsec
 
 import Data.Maybe (catMaybes)
 
+parseFile :: String -> Either ParseError [Definition]
 parseFile = parse file "Error parsing file"
 
 defOrExpr :: Parser (Maybe (Either Definition Expression))
@@ -60,7 +61,7 @@ list = ExprSugar . SugaredList <$> between
 
 letExpression :: Parser Expression
 letExpression = do
-  try $ (string "let" <* whiteSpace)
+  _ <- try $ (string "let" <* whiteSpace)
   firstDef <- definition <* whiteSpace
   restDefs <- manyTill (definition <* whiteSpace) $ string "in"
   whiteSpace
@@ -72,7 +73,7 @@ lazyArgument = fmap MappyLazyArgument $ char '(' *> whiteSpace *> identifier <* 
 
 lambda :: Parser Expression
 lambda = do
-  char '\\'
+  _ <- char '\\'
   whiteSpace
   names <- namesEndingWith $ string "->"
   whiteSpace
@@ -90,6 +91,7 @@ pairs = do
      else unexpected "odd number of values in literal map"
   where
   toMap [] = M.empty
+  toMap [_] = error "Impossible, odd valued map escaped guards."
   toMap (k:v:rest) = M.insert k v $ toMap rest
 
 map' :: Parser Expression
@@ -113,5 +115,5 @@ keyword = char ':' >> (MappyKeyword <$> identifier)
 namedValue :: Parser Expression
 namedValue = MappyNamedValue <$> identifier
 
-whiteSpace :: Parser String
-whiteSpace = many (oneOf " \n\r\t,") <?> "whitespace"
+whiteSpace :: Parser ()
+whiteSpace = many (oneOf " \n\r\t,") *> pure () <?> "whitespace"

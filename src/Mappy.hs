@@ -1,7 +1,5 @@
 module Mappy where
 
-import System.Environment (getArgs)
-
 import Language.Ast
 import Language.Parser
 
