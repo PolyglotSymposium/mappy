@@ -42,7 +42,7 @@ evalMap evaluator (StandardMap map') = go [] (M.toList map')
     key' <- evaluator key
     value' <- evaluator value
     go ((key', value'):pairs) rest
-evalMap _ map' = Right $ MappyMap $ map'
+evalMap _ map' = Right $ MappyMap map'
 
 apply :: Env -> Expression -> [Expression] -> FullyEvaluated Expression
 apply = apply'
@@ -97,7 +97,7 @@ extendEnvironment argNames args env =
     evaluated = map extend unEvaluated
     partitioned = E.partitionEithers evaluated
   in
-    (liftM2 (++)) (final partitioned) (pure env)
+    liftM2 (++) (final partitioned) (pure env)
   where
   final ([], env') = Right env'
   final (errors, _) = Left $ concat errors
@@ -112,10 +112,10 @@ checkAgainstRepeatedDefs defs = go (S.empty, []) defs
   where
   go (_, []) [] = Right defs
   go (_, repeats) [] = Left $ map RepeatedDefinition repeats
-  go (seen, repeats) ((MappyDef (MappyNamedValue name) _):rest) = go (S.insert name seen, newRepeats seen name repeats) rest
+  go (seen, repeats) (MappyDef (MappyNamedValue name) _:rest) = go (S.insert name seen, newRepeats seen name repeats) rest
   go _ _ = error "def constructed with unexpected values"
 
-  newRepeats seen name = (++) (if S.member name seen then [name] else [])
+  newRepeats seen name = (++) [name | S.member name seen] 
 
 initialEnvironment :: [Definition] -> Either [Error Expression] (Env, Expression)
 initialEnvironment = go ([], Nothing)

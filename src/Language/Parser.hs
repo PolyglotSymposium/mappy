@@ -24,7 +24,7 @@ file =
   let
     validTopLevel = choice [lineComment *> pure Nothing, Just <$> definition]
     end = eof <|> lineComment
-    fileContents = catMaybes <$> (many $ validTopLevel <* whiteSpace)
+    fileContents = catMaybes <$> many ( validTopLevel <* whiteSpace)
   in
     whiteSpace *> fileContents <* end
 
@@ -38,7 +38,7 @@ definition :: Parser Definition
 definition = do
   name <- namedValue
   whiteSpace
-  (valueDefinition name <|> functionDefinition name)
+  valueDefinition name <|> functionDefinition name
 
 valueDefinition :: Expression -> Parser Definition
 valueDefinition name = MappyDef name <$> (char '=' *> whiteSpace *> expression)
@@ -75,7 +75,7 @@ list = ExprSugar . SugaredList <$> between
 
 letExpression :: Parser Expression
 letExpression = do
-  _ <- try $ (string "let" <* whiteSpace)
+  _ <- try $ string "let" <* whiteSpace
   firstDef <- definition <* whiteSpace
   restDefs <- manyTill (definition <* whiteSpace) $ string "in"
   whiteSpace
@@ -115,7 +115,7 @@ map' = MappyMap <$> StandardMap <$>
 application :: Parser Expression
 application = between (char '[') (char ']') $ do
     whiteSpace
-    fn <- (namedValue <|> application <|> keyword)
+    fn <- namedValue <|> application <|> keyword
     whiteSpace
     args <- expression `sepEndBy` whiteSpace
     return $ MappyApp fn args

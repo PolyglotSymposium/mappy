@@ -8,7 +8,6 @@ module Language.Ast (
   ) where
 
 import Data.Char (chr)
-import Data.List (intercalate)
 import qualified Data.Map.Strict as M
 
 import Language.Primitives.IoAble
@@ -49,16 +48,16 @@ instance IoAble Expression where
 pretty :: Expression -> String
 pretty (MappyKeyword name) = ':':name
 pretty (MappyNamedValue name) = name
-pretty (MappyApp fn args) = "[" ++ intercalate " " (pretty fn:map pretty args) ++ "]"
+pretty (MappyApp fn args) = "[" ++ unwords (pretty fn:map pretty args) ++ "]"
 pretty mm@(MappyMap (StandardMap map')) =
   case classifyMap map' of
     CharAsMap -> "'" ++ charInternal mm ++ "'"
-    ListAsMap -> "(|" ++ intercalate " " (sugarList $ MappyMap $ StandardMap map') ++ "|)"
+    ListAsMap -> "(|" ++ unwords (sugarList $ MappyMap $ StandardMap map') ++ "|)"
     JustAMap ->
-      "(" ++ intercalate " " (map (\(k, v) -> pretty k ++ " " ++ pretty v) $ M.toList map') ++ ")"
+      "(" ++ unwords (map (\(k, v) -> pretty k ++ " " ++ pretty v) $ M.toList map') ++ ")"
     StringAsMap -> "\"" ++ stringInternal mm ++ "\""
 pretty (MappyMap (IoMap _)) = "__prim_io_map"
-pretty (MappyLambda args body) = "\\" ++ intercalate " " (map pretty args) ++ " -> " ++ pretty body
+pretty (MappyLambda args body) = "\\" ++ unwords (map pretty args) ++ " -> " ++ pretty body
 pretty (MappyClosure args body _) = "#closure[...]#" ++ pretty (MappyLambda args body)
 pretty (MappyLazyArgument _) = "A lazy argument was pretty printed! This is an error in mappy."
 pretty (ExprSugar _) = "A sugared value was pretty printed! This is an error in mappy."
@@ -72,7 +71,7 @@ data MapClassification =
 
 classifyMap :: M.Map Expression Expression -> MapClassification
 classifyMap map' =
-  case map (\k -> M.lookup (MappyKeyword k) map') $ ["__type", "head", "tail"] of
+  case map (\k -> M.lookup (MappyKeyword k) map') ["__type", "head", "tail"] of
     [Just (MappyKeyword "char"), _, _] -> CharAsMap
     [_, Just _, Just _] ->
       if (MappyMap $ StandardMap map') `isListOf` CharAsMap then StringAsMap else ListAsMap
@@ -80,7 +79,7 @@ classifyMap map' =
 
 isListOf :: Expression -> MapClassification -> Bool
 isListOf (MappyMap (StandardMap map')) cls =
-  case (M.size map', map (\k -> M.lookup (MappyKeyword k) map') $ ["head", "tail"]) of
+  case (M.size map', map (\k -> M.lookup (MappyKeyword k) map') ["head", "tail"]) of
     (2, [Just (MappyMap (StandardMap v)), Just rest]) -> classifyMap v == cls && rest `isListOf` cls
     (0, [Nothing, Nothing]) -> True
     _ -> False
@@ -88,7 +87,7 @@ isListOf _ _ = False
 
 sugarList :: Expression -> [String]
 sugarList (MappyMap (StandardMap map')) =
-  case map (\k -> M.lookup (MappyKeyword k) map') $ ["head", "tail"] of
+  case map (\k -> M.lookup (MappyKeyword k) map') ["head", "tail"] of
     [Just v, Just r] -> pretty v:sugarList r
     [Just v, Nothing] -> [pretty v]
     _ -> []
@@ -99,7 +98,7 @@ charInternal mm = [chr $ keyDepth mm $ MappyKeyword "pred"]
 
 stringInternal :: Expression -> String
 stringInternal (MappyMap (StandardMap map')) =
-  case map (\k -> M.lookup (MappyKeyword k) map') $ ["head", "tail"] of
+  case map (\k -> M.lookup (MappyKeyword k) map') ["head", "tail"] of
     [Just k, Just rest] -> charInternal k ++ stringInternal rest
     _ -> ""
 stringInternal _ = error "Attempted to sugar a non-string into a string. This is an error in mappy."

@@ -34,7 +34,7 @@ desugarExpr (MappyLambda args body) = MappyLambda (map desugarExpr args) $ desug
 desugarExpr expr = expr
 
 mappyNat :: Int -> M.Map Expression Expression -> Expression
-mappyNat 0 extra = MappyMap $ StandardMap $ extra
+mappyNat 0 extra = MappyMap $ StandardMap extra
 mappyNat n extra = MappyMap $ StandardMap $ M.insert (MappyKeyword "pred") (mappyNat (n -1 ) extra) extra
 
 defsToLambda :: [Definition] -> Expression -> Expression

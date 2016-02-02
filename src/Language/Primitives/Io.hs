@@ -8,6 +8,6 @@ data Io = Io
   deriving (Eq, Show, Ord)
 
 ioInsert :: IoAble a => a -> a -> ()
-ioInsert key value = case meansPrint key of
-  True -> trace (stringify value) ()
-  False -> ()
+ioInsert key value = if meansPrint key
+  then trace (stringify value) ()
+  else ()
