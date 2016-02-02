@@ -76,6 +76,20 @@ here's a list of some keywords
 (|:a :b :c :d :e|)
 ```
 
+### Characters
+Characters are a special form of [maps](#maps) (noticing a pattern here?).
+As in other languages, characters are surrounded by single quotes
+```
+'m'
+```
+
+### Strings
+Strings are [lists](#lists) of [characters](#characters). As in other
+languages, they are surrounded by double quotes
+```
+"I am a nice string!\nHave a good day :)"
+```
+
 ## Grammar
 For less contrived examples, see the [prelude](prelude/prelude.map).
 
