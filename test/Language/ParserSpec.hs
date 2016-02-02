@@ -19,7 +19,7 @@ data ArbitraryValidKeywordName =
 
 instance Arbitrary ArbitraryValidKeywordName where
   arbitrary = do
-    let validChars = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "_/-+<>!@#$%^&*;\".?="
+    let validChars = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "_/-+<>!@#$%^&*;.?="
     text <- arbitrary
     firstChar <- elements validChars
     let filtered = filter (`elem` validChars) text
@@ -161,12 +161,24 @@ spec = do
     let parseExpression = parse expression ""
 
     for_ [
+        ("\"\"", "")
+      , ("\"mjgpy3\"", "mjgpy3")
+      , ("\"\\\"\"", "\"")
+      , ("\"This is a test.\"", "This is a test.")
+      , ("\"___$%^\"", "___$%^")
+      ] $ \(string, expected) ->
+      describe ("when parsing a string " ++ string) $ do
+        it "parses the sugared expression" $ do
+          parseExpression string `shouldBe` (Right $ ExprSugar $ SugaredString expected)
+
+    for_ [
         ("'a'", 'a')
       , ("'0'", '0')
       , ("'_'", '_')
       , ("'\\n'", '\n')
       , ("'\\t'", '\t')
       , ("'\\\\'", '\\')
+      , ("' '", ' ')
       ] $ \(char, expected) ->
       describe ("when parsing a character " ++ char) $ do
         it "parses the sugared expression" $ do

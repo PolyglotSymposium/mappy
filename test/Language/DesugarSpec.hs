@@ -2,6 +2,7 @@ module Language.DesugarSpec (spec) where
 
 import Test.Hspec
 
+import Debug.Trace
 import Language.Ast
 import Language.Desugar
 
@@ -22,6 +23,17 @@ hasDepthDownKey (MappyMap (StandardMap map)) depth nextKey =
     Just next -> hasDepthDownKey next (depth - 1) nextKey
     Nothing -> depth == 0
 
+hasNCons (MappyApp (MappyNamedValue "cons") [_, v]) depth = hasNCons v $ depth - 1
+hasNCons (MappyNamedValue "nil") depth = depth == 0
+hasNCons a _ = False
+
+hasCharsDown (MappyApp (MappyNamedValue "cons") [v, rest]) (v':vs) =
+  hasKeyAllTheWayDown v (MappyKeyword "__type") (MappyKeyword "char") (MappyKeyword "pred") &&
+  hasDepthDownKey v v' (MappyKeyword "pred")  &&
+  hasCharsDown rest vs
+hasCharsDown (MappyNamedValue "nil") _ = True
+hasCharsDown  _ _ = False
+
 spec :: Spec
 spec = do
   describe "desugarDef" $ do
@@ -36,9 +48,20 @@ spec = do
         desugarDef def `shouldBe` MappyDef fnName (MappyLambda argNames body)
 
   describe "desugarExpr" $ do
+    describe "given a string" $ do
+      let
+        string = ExprSugar $ SugaredString "012"
+        desugared = desugarExpr string
+
+      it "desugars to a list, having the correct number of elements" $ do
+        hasNCons desugared 3 `shouldBe` True
+
+      it "desugars to a list, having the correct elements" $ do
+        hasCharsDown desugared [48, 49, 50] `shouldBe` True
+
     describe "given a character" $ do
       let
-        char = ExprSugar $ SugaredChar $ '0'
+        char = ExprSugar $ SugaredChar '0'
         desugared = desugarExpr char
 
       it "desugars as a nat, with the same value" $ do

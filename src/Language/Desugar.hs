@@ -22,6 +22,8 @@ desugarExpr (ExprSugar (SugaredLet defs body)) =
 desugarExpr (ExprSugar (SugaredList [])) = MappyNamedValue "nil"
 desugarExpr (ExprSugar (SugaredList (v:vs))) =
   MappyApp (MappyNamedValue "cons") [desugarExpr v, desugarExpr $ ExprSugar $ SugaredList vs]
+desugarExpr (ExprSugar (SugaredString str)) =
+  desugarExpr $ ExprSugar $ SugaredList $ map (desugarExpr . ExprSugar . SugaredChar) str
 desugarExpr (ExprSugar (SugaredChar c)) =
     mappyNat (ord c) $ M.singleton (MappyKeyword "__type") (MappyKeyword "char")
 desugarExpr (MappyMap (StandardMap map')) = MappyMap $ StandardMap $ M.fromList $ map go $ M.toList map'

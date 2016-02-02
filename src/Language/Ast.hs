@@ -22,6 +22,7 @@ data SugaredExpression =
   SugaredLet [Definition] Expression
   | SugaredList [Expression]
   | SugaredChar Char
+  | SugaredString String
   deriving (Eq, Show, Ord)
 
 data Definition =
