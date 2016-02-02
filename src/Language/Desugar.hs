@@ -42,3 +42,4 @@ defsToLambda [] expr =
   expr
 defsToLambda (MappyDef name value:rest) expr =
   MappyApp (MappyLambda [name] $ defsToLambda rest expr) [value]
+defsToLambda (DefSugar _:_) _ = error "A sugared def escaped to let! This is an error in mappy."
