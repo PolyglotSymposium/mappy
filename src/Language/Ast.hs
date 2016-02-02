@@ -50,12 +50,34 @@ pretty (MappyKeyword name) = ':':name
 pretty (MappyNamedValue name) = name
 pretty (MappyApp fn args) = "[" ++ intercalate " " (pretty fn:map pretty args) ++ "]"
 pretty mm@(MappyMap (StandardMap map')) =
-  case M.lookup (MappyKeyword "__type") map' of
-    Just (MappyKeyword "char") -> "'" ++ [chr $ keyDepth mm $ MappyKeyword "pred"] ++ "'"
-    Nothing -> "(" ++ intercalate " " (map (\(k, v) -> pretty k ++ " " ++ pretty v) $ M.toList map') ++ ")"
+  case classifyMap map' of
+    CharAsMap -> "'" ++ [chr $ keyDepth mm $ MappyKeyword "pred"] ++ "'"
+    ListAsMap -> "(|" ++ intercalate " " (sugarList $ MappyMap $ StandardMap map') ++ "|)"
+    JustAMap ->
+      "(" ++ intercalate " " (map (\(k, v) -> pretty k ++ " " ++ pretty v) $ M.toList map') ++ ")"
 pretty (MappyMap (IoMap _)) = "__prim_io_map"
 pretty (MappyLambda args body) = "\\" ++ intercalate " " (map pretty args) ++ " -> " ++ pretty body
 pretty (MappyClosure args body _) = "#closure[...]#" ++ pretty (MappyLambda args body)
+
+data MapClassification =
+  CharAsMap
+  | ListAsMap
+  | JustAMap
+
+classifyMap :: M.Map Expression Expression -> MapClassification
+classifyMap map' =
+  case M.lookup (MappyKeyword "__type") map' of
+    Just (MappyKeyword "char") -> CharAsMap
+    Nothing -> case map (\k -> M.lookup (MappyKeyword k) map') $ ["head", "tail"] of
+      [Just _, Just _] -> ListAsMap
+      _ -> JustAMap
+
+sugarList :: Expression -> [String]
+sugarList (MappyMap (StandardMap map')) =
+  case map (\k -> M.lookup (MappyKeyword k) map') $ ["head", "tail"] of
+    [Just v, Just r] -> pretty v:sugarList r
+    [Just v, Nothing] -> [pretty v]
+    _ -> []
 
 keyDepth :: Expression -> Expression -> Int
 keyDepth (MappyMap (StandardMap map')) key =
