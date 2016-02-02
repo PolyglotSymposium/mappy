@@ -52,10 +52,11 @@ pretty (MappyNamedValue name) = name
 pretty (MappyApp fn args) = "[" ++ intercalate " " (pretty fn:map pretty args) ++ "]"
 pretty mm@(MappyMap (StandardMap map')) =
   case classifyMap map' of
-    CharAsMap -> "'" ++ [chr $ keyDepth mm $ MappyKeyword "pred"] ++ "'"
+    CharAsMap -> "'" ++ charInternal mm ++ "'"
     ListAsMap -> "(|" ++ intercalate " " (sugarList $ MappyMap $ StandardMap map') ++ "|)"
     JustAMap ->
       "(" ++ intercalate " " (map (\(k, v) -> pretty k ++ " " ++ pretty v) $ M.toList map') ++ ")"
+    StringAsMap -> "\"" ++ stringInternal mm ++ "\""
 pretty (MappyMap (IoMap _)) = "__prim_io_map"
 pretty (MappyLambda args body) = "\\" ++ intercalate " " (map pretty args) ++ " -> " ++ pretty body
 pretty (MappyClosure args body _) = "#closure[...]#" ++ pretty (MappyLambda args body)
@@ -63,15 +64,24 @@ pretty (MappyClosure args body _) = "#closure[...]#" ++ pretty (MappyLambda args
 data MapClassification =
   CharAsMap
   | ListAsMap
+  | StringAsMap
   | JustAMap
+  deriving Eq
 
 classifyMap :: M.Map Expression Expression -> MapClassification
 classifyMap map' =
-  case M.lookup (MappyKeyword "__type") map' of
-    Just (MappyKeyword "char") -> CharAsMap
-    Nothing -> case map (\k -> M.lookup (MappyKeyword k) map') $ ["head", "tail"] of
-      [Just _, Just _] -> ListAsMap
-      _ -> JustAMap
+  case map (\k -> M.lookup (MappyKeyword k) map') $ ["__type", "head", "tail"] of
+    [Just (MappyKeyword "char"), _, _] -> CharAsMap
+    [_, Just _, Just _] ->
+      if (MappyMap $ StandardMap map') `isListOf` CharAsMap then StringAsMap else ListAsMap
+    _ -> JustAMap
+
+isListOf :: Expression -> MapClassification -> Bool
+isListOf (MappyMap (StandardMap map')) cls =
+  case (M.size map', map (\k -> M.lookup (MappyKeyword k) map') $ ["head", "tail"]) of
+    (2, [Just (MappyMap (StandardMap v)), Just rest]) -> classifyMap v == cls && rest `isListOf` cls
+    (0, [Nothing, Nothing]) -> True
+    _ -> False
 
 sugarList :: Expression -> [String]
 sugarList (MappyMap (StandardMap map')) =
@@ -79,6 +89,15 @@ sugarList (MappyMap (StandardMap map')) =
     [Just v, Just r] -> pretty v:sugarList r
     [Just v, Nothing] -> [pretty v]
     _ -> []
+
+charInternal :: Expression -> String
+charInternal mm = [chr $ keyDepth mm $ MappyKeyword "pred"]
+
+stringInternal :: Expression -> String
+stringInternal (MappyMap (StandardMap map')) =
+  case map (\k -> M.lookup (MappyKeyword k) map') $ ["head", "tail"] of
+    [Just k, Just rest] -> charInternal k ++ stringInternal rest
+    _ -> ""
 
 keyDepth :: Expression -> Expression -> Int
 keyDepth (MappyMap (StandardMap map')) key =
