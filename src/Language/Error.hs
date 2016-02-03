@@ -8,6 +8,7 @@ data Error a =
   | KeyNotFound a
   | GiveCalledOnNonMap a a a
   | TakeCalledOnNonMap String a a
+  | NotAFunction a
   deriving (Show, Eq)
 
 singleError :: a -> Either [a] b

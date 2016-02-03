@@ -41,6 +41,16 @@ spec = do
       it "reduces until the final value" $ do
         exec code `shouldBe` Right (MappyKeyword "c")
 
+    describe "the application of a non-function or keyword" $ do
+      let
+        code appliedTo = [
+          MappyDef (MappyNamedValue "a") $ MappyMap $ StandardMap M.empty,
+          def_main $ MappyApp (MappyNamedValue "a") [MappyKeyword "b"]
+          ]
+
+      it "errors saying that the keyword is not a function" $ do
+        exec (code map) `shouldBe` (Left [NotAFunction $ MappyMap $ StandardMap $ M.empty])
+
     describe "the application of a keyword" $ do
       let
         map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")

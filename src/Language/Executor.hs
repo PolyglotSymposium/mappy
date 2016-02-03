@@ -77,7 +77,7 @@ applyNonPrim args _ (MappyClosure argNames body closedEnv) = do
   eval env' body
 applyNonPrim args env kwd@(MappyKeyword _) =
   eval env $ MappyApp (MappyNamedValue "take") (kwd:args)
-applyNonPrim _ _ _ = error "TODO: #40"
+applyNonPrim _ _ value = Left [NotAFunction value]
 
 evalAll :: Env -> [Expression] -> FullyEvaluated [Expression]
 evalAll env exprs = case E.partitionEithers $ map (eval env) exprs of
