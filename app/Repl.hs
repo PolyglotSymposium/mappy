@@ -1,6 +1,7 @@
 module Repl (repl) where
 
 import Paths_mappy
+import System.Console.Haskeline
 import System.IO
 import Text.ParserCombinators.Parsec
 import Data.List (intercalate)
@@ -34,26 +35,22 @@ repl = do
 
 repl' :: Either [Error Expression] Env -> IO ()
 repl' (Left errors) = putStrLn $ show errors
-repl' (Right initialEnv) = go initialEnv
+repl' (Right initialEnv) = runInputT defaultSettings (go initialEnv)
   where
   go env = do
-    line <- read'
-    case parse defOrExpr "(unknown)" line of
-      Left err -> (putStrLn $ show err) >> go env
-      Right (Just (Left def)) ->
-        let
-          (MappyDef name value) = desugarEachDef def
-        in
-          go ((name, value):env)
+    line <- getInputLine "m> "
+    case line of
+      Nothing -> go env
+      Just line' -> case parse defOrExpr "(unknown)" line' of
+        Left err -> (outputStrLn $ show err) >> go env
+        Right (Just (Left def)) ->
+          let
+            (MappyDef name value) = desugarEachDef def
+          in
+            go ((name, value):env)
 
-      Right (Just (Right expr)) -> case eval env (desugarExpr expr) of
-        Left errors -> (putStrLn $ show errors) *> go env
-        Right result -> (putStrLn $ pretty result) *> go env
+        Right (Just (Right expr)) -> case eval env (desugarExpr expr) of
+          Left errors -> (outputStrLn $ show errors) *> go env
+          Right result -> (outputStrLn $ pretty result) *> go env
 
-      Right Nothing -> go env
-
-read' :: IO String
-read' = do
-  putStr "m> "
-  hFlush stdout
-  getLine
+        Right Nothing -> go env
