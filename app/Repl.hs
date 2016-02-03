@@ -2,7 +2,7 @@ module Repl (repl) where
 
 import Paths_mappy
 import System.Console.Haskeline
-import System.IO
+import System.Directory
 import Text.ParserCombinators.Parsec
 import Data.List (intercalate)
 
@@ -31,12 +31,14 @@ repl :: IO ()
 repl = do
   prelude <- preludePath >>= readMappyFile
   putStrLn mappyAsciiArt
-  repl' (fst <$> validatePreExec prelude)
+  home <- getHomeDirectory
+  repl' (fst <$> validatePreExec prelude, concat [home, "/", ".mappy_history"])
 
-repl' :: Either [Error Expression] Env -> IO ()
-repl' (Left errors) = putStrLn $ show errors
-repl' (Right initialEnv) = runInputT defaultSettings (go initialEnv)
+repl' :: (Either [Error Expression] Env, FilePath) -> IO ()
+repl' (Left errors, _) = putStrLn $ show errors
+repl' (Right initialEnv, histFile) = runInputT settings (go initialEnv)
   where
+  settings = defaultSettings { historyFile = Just histFile }
   go env = do
     line <- getInputLine "m> "
     case line of
