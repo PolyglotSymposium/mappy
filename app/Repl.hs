@@ -3,6 +3,7 @@ module Repl (repl) where
 import Paths_mappy
 import System.IO
 import Text.ParserCombinators.Parsec
+import Data.List (intercalate)
 
 import Mappy
 import Language.Ast
@@ -14,9 +15,21 @@ import Language.Parser
 preludePath :: IO FilePath
 preludePath = getDataFileName "prelude.map"
 
+mappyAsciiArt :: String
+mappyAsciiArt =
+  '\n':intercalate "\n" [
+      "|  \\/  |                        "
+    , "| .  . | __ _ _ __  _ __  _   _ "
+    , "| |\\/| |/ _` | '_ \\| '_ \\| | | |"
+    , "| |  | | (_| | |_) | |_) | |_| |"
+    , "\\_|  |_/\\__,_| .__/| .__/ \\__, |"
+    , "             | |   | |     __/ |"
+    , "             |_|   |_|    |___/ "]
+
 repl :: IO ()
 repl = do
   prelude <- preludePath >>= readMappyFile
+  putStrLn mappyAsciiArt
   repl' (fst <$> validatePreExec prelude)
 
 repl' :: Either [Error Expression] Env -> IO ()
