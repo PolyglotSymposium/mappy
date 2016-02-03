@@ -1,6 +1,7 @@
 module Repl (repl) where
 
 import Paths_mappy
+import System.Console.ANSI
 import System.Console.Haskeline
 import System.Directory
 import Text.ParserCombinators.Parsec
@@ -30,7 +31,9 @@ mappyAsciiArt =
 repl :: IO ()
 repl = do
   prelude <- preludePath >>= readMappyFile
+  setSGR [SetColor Foreground Vivid Green]
   putStrLn mappyAsciiArt
+  setSGR [Reset]
   home <- getHomeDirectory
   repl' (fst <$> validatePreExec prelude, concat [home, "/", ".mappy_history"])
 
