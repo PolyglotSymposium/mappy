@@ -35,6 +35,20 @@ nil = ()
 
 cons value list = (:head value :tail list)
 
+-- ++ : list a -> list a -> list a
+++ as bs = [
+  if [empty? as]
+    bs
+    [cons [:head as] [++ [:tail as] bs]]
+]
+
+-- concat : list (list a) -> list a
+concat values = [
+  if [empty? values]
+    nil
+    [++ [:head values] [concat [:tail values]]]
+]
+
 apply fn v = [fn v]
 
 assert c = [if c :pass :fail]
@@ -81,6 +95,8 @@ cases = (|
   (:name :filter-for-harder-case :assertion [equal? [filter [. not empty?] silly-with-empties-list] silly-list])
   (:name :compose-for-trivial-case :assertion [[. identity identity] true])
   (:name :compose-for-harder-case :assertion [[. not not] true])
+  (:name :++-for-trivial-case :assertion [equal? [++ nil nil] nil])
+  (:name :++-for-harder-case :assertion [equal? [++ (|:a :b :c|) (|:d :e|)] (|:a :b :c :d :e|)])
 |)
 
 taking key = \map -> [take key map]
