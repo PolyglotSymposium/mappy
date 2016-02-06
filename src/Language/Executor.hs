@@ -105,7 +105,7 @@ extendEnvironment argNames args env =
     v' <- eval env value
     return (MappyNamedValue name, v')
   extend (MappyLazyArgument name, value) = Right (MappyNamedValue name, MappyLambda [] value)
-  extend _ = error "TODO: Better error for when a fn has a non-namey name"
+  extend _ = errorInMappy "TODO: Better error for when a fn has a non-namey name."
 
 checkAgainstRepeatedDefs :: [Definition] -> Either [Error Expression] [Definition]
 checkAgainstRepeatedDefs defs = go (S.empty, []) defs
@@ -113,9 +113,9 @@ checkAgainstRepeatedDefs defs = go (S.empty, []) defs
   go (_, []) [] = Right defs
   go (_, repeats) [] = Left $ map RepeatedDefinition repeats
   go (seen, repeats) (MappyDef (MappyNamedValue name) _:rest) = go (S.insert name seen, newRepeats seen name repeats) rest
-  go _ _ = error "def constructed with unexpected values"
+  go _ _ = errorInMappy "A definition was constructed with unexpected values."
 
-  newRepeats seen name = (++) [name | S.member name seen] 
+  newRepeats seen name = (++) [name | S.member name seen]
 
 initialEnvironment :: [Definition] -> Either [Error Expression] (Env, Expression)
 initialEnvironment = go ([], Nothing)
@@ -124,4 +124,4 @@ initialEnvironment = go ([], Nothing)
   go (_, Nothing) [] = singleError MainNotFound
   go (env, _) (MappyDef (MappyNamedValue "main") mainBody:rest) = go (env, Just mainBody) rest
   go (env, maybeMain) (MappyDef name body:rest) = go ((name, body):env, maybeMain) rest
-  go _ _ = error "Sugared def escaped into execution"
+  go _ _ = errorInMappy "A sugared definition escaped into execution."

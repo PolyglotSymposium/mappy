@@ -1,6 +1,7 @@
 module Language.Parser where
 
 import Language.Ast
+import Language.Error (errorInMappy)
 import qualified Data.Map.Strict as M
 import Text.ParserCombinators.Parsec
 
@@ -106,7 +107,7 @@ pairs = do
      else unexpected "odd number of values in literal map"
   where
   toMap [] = M.empty
-  toMap [_] = error "Impossible, odd valued map escaped guards."
+  toMap [_] = errorInMappy "Impossible, odd valued map escaped guards."
   toMap (k:v:rest) = M.insert k v $ toMap rest
 
 map' :: Parser Expression

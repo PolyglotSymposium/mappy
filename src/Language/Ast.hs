@@ -12,6 +12,7 @@ import qualified Data.Map.Strict as M
 
 import Language.Primitives.IoAble
 import Language.Primitives.Map
+import Language.Error (errorInMappy)
 
 data SugaredDefinition =
   SugaredFnDefinition Expression [Expression] Expression
@@ -59,8 +60,8 @@ pretty mm@(MappyMap (StandardMap map')) =
 pretty (MappyMap (IoMap _)) = "__prim_io_map"
 pretty (MappyLambda args body) = "\\" ++ unwords (map pretty args) ++ " -> " ++ pretty body
 pretty (MappyClosure args body _) = "#closure[...]#" ++ pretty (MappyLambda args body)
-pretty (MappyLazyArgument _) = "A lazy argument was pretty printed! This is an error in mappy."
-pretty (ExprSugar _) = "A sugared value was pretty printed! This is an error in mappy."
+pretty (MappyLazyArgument _) = errorInMappy "A lazy argument was pretty printed."
+pretty (ExprSugar _) = errorInMappy "A sugared value was pretty printed."
 
 data MapClassification =
   CharAsMap
@@ -91,7 +92,7 @@ sugarList (MappyMap (StandardMap map')) =
     [Just v, Just r] -> pretty v:sugarList r
     [Just v, Nothing] -> [pretty v]
     _ -> []
-sugarList _ = error "Attempted to sugar a non-list into a list. This is an error in mappy."
+sugarList _ = errorInMappy "Attempted to sugar a non-list into a list."
 
 charInternal :: Expression -> String
 charInternal mm = [chr $ keyDepth mm $ MappyKeyword "pred"]
@@ -101,11 +102,11 @@ stringInternal (MappyMap (StandardMap map')) =
   case map (\k -> M.lookup (MappyKeyword k) map') ["head", "tail"] of
     [Just k, Just rest] -> charInternal k ++ stringInternal rest
     _ -> ""
-stringInternal _ = error "Attempted to sugar a non-string into a string. This is an error in mappy."
+stringInternal _ = errorInMappy "Attempted to sugar a non-string into a string."
 
 keyDepth :: Expression -> Expression -> Int
 keyDepth (MappyMap (StandardMap map')) key =
   case M.lookup key map' of
     Just next -> 1 + keyDepth next key
     Nothing -> 0
-keyDepth _ _ = error "keyDepth called on non-map"
+keyDepth _ _ = errorInMappy "keyDepth called on non-map."

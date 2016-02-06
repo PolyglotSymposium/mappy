@@ -1,6 +1,7 @@
 module Language.Desugar where
 
 import Language.Ast
+import Language.Error (errorInMappy)
 
 import Data.Char (ord)
 import qualified Data.Map.Strict as M
@@ -42,4 +43,4 @@ defsToLambda [] expr =
   expr
 defsToLambda (MappyDef name value:rest) expr =
   MappyApp (MappyLambda [name] $ defsToLambda rest expr) [value]
-defsToLambda (DefSugar _:_) _ = error "A sugared def escaped to let! This is an error in mappy."
+defsToLambda (DefSugar _:_) _ = errorInMappy "A sugared def escaped to let."
