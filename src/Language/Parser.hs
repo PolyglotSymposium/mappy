@@ -99,6 +99,7 @@ namesEndingWith = manyTill ((namedValue <|> lazyArgument) <* whiteSpace)
 
 pairs :: Parser (M.Map Expression Expression)
 pairs = do
+  whiteSpace
   ps <- expression `sepEndBy` whiteSpace
   if even $ length ps
      then pure $ toMap ps

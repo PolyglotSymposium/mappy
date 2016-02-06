@@ -289,6 +289,10 @@ spec = do
           parseExpression "[()]" `shouldSatisfy` isLeft
 
     describe "when parsing maps" $ do
+      describe "a map with whitespace after the first paren" $ do
+        it "parses fine" $ do
+          parseExpression "(\n  \t\t:a :b)" `shouldBe` (Right $ MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"))
+
       describe "the empty map" $ do
         it "parses correctly" $ do
           parseExpression "()" `shouldBe` Right (MappyMap $ StandardMap M.empty)
