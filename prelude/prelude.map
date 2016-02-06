@@ -64,6 +64,20 @@ replicate n v = [
     [cons v [replicate [pred n] v]]
 ]
 
+-- intersperse : a -> list a -> list a
+intersperse sep values =
+  let
+    prepend-all vs = [
+      if [empty? vs]
+        nil
+        [cons sep [cons [:head vs] [prepend-all [:tail vs]]]]
+    ]
+  in [
+    if [empty? values]
+      nil
+      [cons [:head values] [prepend-all [:tail values]]]
+  ]
+
 apply fn v = [fn v]
 
 assert c = [if c :pass :fail]
@@ -124,6 +138,14 @@ cases = (|
     ]
   )
   (:name :replicate-for-n :assertion [equal? [replicate four four] (|four four four four|)])
+  (:name :intersperse-for-empty :assertion [equal? [intersperse four nil] nil])
+  (:name :intersperse-for-singleton :assertion [equal? [intersperse four (|four|)] (|four|)])
+  (:name :intersperse-for-bigger-list
+    :assertion [equal?
+      [intersperse zero (|four four four|)]
+      (|four zero four zero four|)
+    ]
+  )
 |)
 
 taking key = \map -> [take key map]
