@@ -24,6 +24,7 @@ add a b = [
 ]
 
 two = [succ [succ zero]]
+four = [add two two]
 
 identity a = a
 
@@ -47,6 +48,13 @@ concat values = [
   if [empty? values]
     nil
     [++ [:head values] [concat [:tail values]]]
+]
+
+-- iterate-n : (a -> a) -> a -> nat -> list a
+iterate-n f v n = [
+  if [equal? n zero]
+    nil
+    [cons v [iterate-n f [f v] [pred n]]]
 ]
 
 apply fn v = [fn v]
@@ -97,6 +105,17 @@ cases = (|
   (:name :compose-for-harder-case :assertion [[. not not] true])
   (:name :++-for-trivial-case :assertion [equal? [++ nil nil] nil])
   (:name :++-for-harder-case :assertion [equal? [++ (|:a :b :c|) (|:d :e|)] (|:a :b :c :d :e|)])
+  (:name :concat-for-trivial-case :assertion [equal? [concat (| nil nil nil nil |)] nil])
+  (:name :concat-for-harder-case :assertion [equal? [concat (| (|:a :b :c|) (|:d :e|) (|:f|) |)] (|:a :b :c :d :e :f|)])
+  (:name :iterate-n-for-0 :assertion [equal? [iterate-n identity zero zero] nil])
+  (:name :iterate-n-for-1 :assertion [equal? [iterate-n identity zero (:pred zero)] (|zero|)])
+  (:name :iterate-n-for-n :assertion [equal? [iterate-n identity zero (:pred zero)] (|zero|)])
+  (:name :iterate-n-for-n
+    :assertion [equal?
+      [iterate-n succ zero four]
+      (|zero (:pred zero) two (:pred two)|)
+    ]
+  )
 |)
 
 taking key = \map -> [take key map]
