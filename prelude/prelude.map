@@ -99,6 +99,24 @@ reverse vs =
   in
     [go vs nil]
 
+-- split: a -> list a -> list (list a)
+split delim vs =
+  let
+    go vs acc = [
+      if [empty? vs]
+        [if [empty? acc] nil (|[reverse acc]|)]
+        let
+          first = [:head vs]
+          rest = [:tail vs]
+        in [
+          if [equal? delim first]
+            [cons [reverse acc] [go rest nil]]
+            [go rest [cons first acc]]
+        ]
+    ]
+  in
+    [go vs nil]
+
 apply fn v = [fn v]
 
 assert c = [if c :pass :fail]
@@ -198,6 +216,11 @@ cases = (|
       (|four two zero|)
     ]
   )
+  (:name :split-for-empty :assertion [empty? [split ',' nil]])
+  (:name :split-for-no-matches :assertion [equal? [split ',' "Hello"] (|"Hello"|)])
+  (:name :split-for-simple-matches :assertion [equal? [split ',' "a,b,c"] (|"a" "b" "c"|)])
+  (:name :split-for-match-on-the-end :assertion [equal? [split ',' "a,b,"] (|"a" "b"|)])
+  (:name :split-for-consecutive-matches :assertion [equal? [split ',' "a,,b"] (|"a" "" "b"|)])
 |)
 
 taking key = \map -> [take key map]
