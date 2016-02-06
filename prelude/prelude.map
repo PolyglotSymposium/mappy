@@ -57,6 +57,13 @@ iterate-n f v n = [
     [cons v [iterate-n f [f v] [pred n]]]
 ]
 
+-- replicate : nat -> a -> list a
+replicate n v = [
+  if [equal? n zero]
+    nil
+    [cons v [replicate [pred n] v]]
+]
+
 apply fn v = [fn v]
 
 assert c = [if c :pass :fail]
@@ -116,6 +123,7 @@ cases = (|
       (|zero (:pred zero) two (:pred two)|)
     ]
   )
+  (:name :replicate-for-n :assertion [equal? [replicate four four] (|four four four four|)])
 |)
 
 taking key = \map -> [take key map]
