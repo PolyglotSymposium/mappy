@@ -88,6 +88,17 @@ fold f init vs = [
     [f [:head vs] [fold f init [:tail vs]]]
 ]
 
+-- reverse : list a -> list a
+reverse vs =
+  let
+    go vs acc = [
+      if [empty? vs]
+        acc
+        [go [:tail vs] [cons [:head vs] acc]]
+    ]
+  in
+    [go vs nil]
+
 apply fn v = [fn v]
 
 assert c = [if c :pass :fail]
@@ -178,6 +189,13 @@ cases = (|
     :assertion [equal?
       [fold add zero (|two two four four|)]
       [add four [add four four]]
+    ]
+  )
+  (:name :reverse-for-empty :assertion [empty? [reverse nil]])
+  (:name :reverse-for-non-trivial-case
+    :assertion [equal?
+      [reverse (|zero two four|)]
+      (|four two zero|)
     ]
   )
 |)
