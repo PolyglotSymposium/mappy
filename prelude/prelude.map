@@ -78,6 +78,9 @@ intersperse sep values =
       [cons [:head values] [prepend-all [:tail values]]]
   ]
 
+-- intercalate : list a -> list (list a) -> list a
+intercalate sep vs = [concat [intersperse sep vs]]
+
 apply fn v = [fn v]
 
 assert c = [if c :pass :fail]
@@ -144,6 +147,18 @@ cases = (|
     :assertion [equal?
       [intersperse zero (|four four four|)]
       (|four zero four zero four|)
+    ]
+  )
+  (:name :intercalate-for-empties
+    :assertion [equal?
+      [intercalate nil nil]
+      nil
+    ]
+  )
+  (:name :intercalate-for-non-trivial-case
+    :assertion [equal?
+      [intercalate ", " (|"hello" "world" "hi"|)]
+      "hello, world, hi"
     ]
   )
 |)
