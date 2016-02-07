@@ -66,13 +66,31 @@ spec = do
           exec (code $ MappyKeyword "b") `shouldBe` (Left [TakeCalledOnNonMap "take" (MappyKeyword "a") (MappyKeyword "b")])
 
     describe "the application of a lambda" $ do
-      let lambda = MappyDef (MappyNamedValue "second") (MappyLambda [MappyNamedValue "a", MappyNamedValue "b"] (MappyNamedValue "b"))
+      let lambda = MappyDef (MappyNamedValue "const") (MappyLambda [MappyNamedValue "a", MappyNamedValue "b"] (MappyNamedValue "a"))
+
+      describe "with too few arguments" $ do
+        let
+          code = [
+            lambda
+            , def_main $ MappyApp (MappyNamedValue "const") [MappyKeyword "foo"]
+            ]
+
+          (Right (MappyClosure argNames body (newEnvEntry:_))) = exec code
+
+        it "reduces the number of arguments down by the number applied" $ do
+          argNames `shouldBe` [MappyNamedValue "b"]
+
+        it "keeps the same function body" $ do
+          body `shouldBe` MappyNamedValue "a"
+
+        it "extends the closure's environment with the applied argument name and value" $ do
+          newEnvEntry `shouldBe` (MappyNamedValue "a", MappyKeyword "foo")
 
       describe "with too many arguments" $ do
         let
           code = [
             lambda
-            , def_main $ MappyApp (MappyNamedValue "second") [MappyKeyword "a", MappyKeyword "b", MappyKeyword "c"]
+            , def_main $ MappyApp (MappyNamedValue "const") [MappyKeyword "a", MappyKeyword "b", MappyKeyword "c"]
             ]
 
         it "errors with a WrongNumberOfArguments error" $ do
@@ -82,11 +100,11 @@ spec = do
         let
           code = [
             lambda
-            , def_main $ MappyApp (MappyNamedValue "second") [MappyKeyword "a", MappyKeyword "b"]
+            , def_main $ MappyApp (MappyNamedValue "const") [MappyKeyword "a", MappyKeyword "b"]
             ]
 
         it "applies it as a function" $ do
-          exec code `shouldBe` Right (MappyKeyword "b")
+          exec code `shouldBe` Right (MappyKeyword "a")
 
     describe "a lambda" $ do
       describe "given the wrong number of arguments" $ do

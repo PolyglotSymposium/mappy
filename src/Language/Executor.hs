@@ -6,7 +6,7 @@ import qualified Data.Set as S
 import Control.Monad (liftM2)
 
 import Language.Ast
-import Language.Ast.PrettyPrinter
+import Language.Ast.PrettyPrinter()
 import Language.Desugar
 import Language.Error
 import Language.Primitives
@@ -74,8 +74,13 @@ apply' env nonPrimitive args =
 
 applyNonPrim :: [Expression] -> Env -> Expression -> FullyEvaluated Expression
 applyNonPrim args _ (MappyClosure argNames body closedEnv) = do
-  env' <- extendEnvironment argNames args closedEnv
-  eval env' body
+  env' <- extendEnvironment (take n argNames) (take n args) closedEnv
+  case compare (length argNames) n of
+    LT -> Left [WrongNumberOfArguments "#closure#" (length argNames) n]
+    GT -> return $ MappyClosure (drop n argNames) body env'
+    EQ -> eval env' body
+  where n = length args
+
 applyNonPrim args env kwd@(MappyKeyword _) =
   eval env $ MappyApp (MappyNamedValue "take") (kwd:args)
 applyNonPrim _ _ value = Left [NotAFunction value]
@@ -89,7 +94,7 @@ assertMap :: String -> Expression -> Expression -> FullyEvaluated Expression
 assertMap _ _ m@(MappyMap _) = Right m
 assertMap fn key nonMap = Left [TakeCalledOnNonMap fn key nonMap]
 
-extendEnvironment :: [Expression] -> [Expression] -> Env -> Either [Error Expression] Env
+extendEnvironment :: [Expression] -> [Expression] -> Env -> FullyEvaluated Env
 extendEnvironment argNames args env =
   let
     -- Env
@@ -98,9 +103,7 @@ extendEnvironment argNames args env =
     evaluated = map extend unEvaluated
     partitioned = E.partitionEithers evaluated
   in
-    case compare (length argNames) (length args) of
-      LT -> Left [WrongNumberOfArguments "#closure#" (length argNames) (length args)]
-      _ -> liftM2 (++) (final partitioned) (pure env)
+    liftM2 (++) (final partitioned) (pure env)
   where
   final ([], env') = Right env'
   final (errors, _) = Left $ concat errors
