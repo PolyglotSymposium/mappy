@@ -11,6 +11,7 @@ import Mappy
 import Language.Ast
 import Language.Desugar
 import Language.Error
+import Language.Error.PrettyPrinter()
 import Language.Executor
 import Language.Parser
 
@@ -54,8 +55,7 @@ repl' (Right initialEnv, histFile) = runInputT settings (go initialEnv)
           in
             go ((name, value):env)
 
-        Right (Just (Right expr)) -> case eval env (desugarExpr expr) of
-          Left errors -> (outputStrLn $ show errors) *> go env
-          Right result -> (outputStrLn $ pretty result) *> go env
+        Right (Just (Right expr)) -> case eval env $ desugarExpr expr of
+          v -> (outputStrLn $ print' v) *> go env
 
         Right Nothing -> go env

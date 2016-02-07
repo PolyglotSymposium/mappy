@@ -10,9 +10,10 @@ module Language.Ast (
 import Data.Char (chr)
 import qualified Data.Map.Strict as M
 
+import Language.Error (errorInMappy)
+import Language.PrettyPrintable
 import Language.Primitives.IoAble
 import Language.Primitives.Map
-import Language.Error (errorInMappy)
 
 data SugaredDefinition =
   SugaredFnDefinition Expression [Expression] Expression
@@ -46,22 +47,22 @@ instance IoAble Expression where
   meansPrint (MappyKeyword "print") = True
   meansPrint _ = False
 
-pretty :: Expression -> String
-pretty (MappyKeyword name) = ':':name
-pretty (MappyNamedValue name) = name
-pretty (MappyApp fn args) = "[" ++ unwords (pretty fn:map pretty args) ++ "]"
-pretty mm@(MappyMap (StandardMap map')) =
-  case classifyMap map' of
-    CharAsMap -> "'" ++ charInternal mm ++ "'"
-    ListAsMap -> "(|" ++ unwords (sugarList $ MappyMap $ StandardMap map') ++ "|)"
-    JustAMap ->
-      "(" ++ unwords (map (\(k, v) -> pretty k ++ " " ++ pretty v) $ M.toList map') ++ ")"
-    StringAsMap -> "\"" ++ stringInternal mm ++ "\""
-pretty (MappyMap (IoMap _)) = "__prim_io_map"
-pretty (MappyLambda args body) = "\\" ++ unwords (map pretty args) ++ " -> " ++ pretty body
-pretty (MappyClosure args body _) = "#closure[...]#" ++ pretty (MappyLambda args body)
-pretty (MappyLazyArgument _) = errorInMappy "A lazy argument was pretty printed."
-pretty (ExprSugar _) = errorInMappy "A sugared value was pretty printed."
+instance PrettyPrintable Expression where
+  pretty (MappyKeyword name) = ':':name
+  pretty (MappyNamedValue name) = name
+  pretty (MappyApp fn args) = "[" ++ unwords (pretty fn:map pretty args) ++ "]"
+  pretty mm@(MappyMap (StandardMap map')) =
+    case classifyMap map' of
+      CharAsMap -> "'" ++ charInternal mm ++ "'"
+      ListAsMap -> "(|" ++ unwords (sugarList $ MappyMap $ StandardMap map') ++ "|)"
+      JustAMap ->
+        "(" ++ unwords (map (\(k, v) -> pretty k ++ " " ++ pretty v) $ M.toList map') ++ ")"
+      StringAsMap -> "\"" ++ stringInternal mm ++ "\""
+  pretty (MappyMap (IoMap _)) = "__prim_io_map"
+  pretty (MappyLambda args body) = "\\" ++ unwords (map pretty args) ++ " -> " ++ pretty body
+  pretty (MappyClosure args body _) = "#closure[...]#" ++ pretty (MappyLambda args body)
+  pretty (MappyLazyArgument _) = errorInMappy "A lazy argument was pretty printed."
+  pretty (ExprSugar _) = errorInMappy "A sugared value was pretty printed."
 
 data MapClassification =
   CharAsMap

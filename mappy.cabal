@@ -23,8 +23,10 @@ library
                      , Language.Ast
                      , Language.Desugar
                      , Language.Error
+                     , Language.Error.PrettyPrinter
                      , Language.Executor
                      , Language.Parser
+                     , Language.PrettyPrintable
                      , Language.Primitives
                      , Language.Primitives.Io
                      , Language.Primitives.IoAble
