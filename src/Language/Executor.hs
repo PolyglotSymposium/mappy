@@ -97,7 +97,9 @@ extendEnvironment argNames args env =
     evaluated = map extend unEvaluated
     partitioned = E.partitionEithers evaluated
   in
-    liftM2 (++) (final partitioned) (pure env)
+    case compare (length argNames) (length args) of
+      LT -> Left [WrongNumberOfArguments "#closure#" (length argNames) (length args)]
+      _ -> liftM2 (++) (final partitioned) (pure env)
   where
   final ([], env') = Right env'
   final (errors, _) = Left $ concat errors
