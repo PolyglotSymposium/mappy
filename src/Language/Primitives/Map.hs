@@ -2,6 +2,7 @@ module Language.Primitives.Map where
 
 import qualified Data.Map.Strict as M
 
+import Language.PrettyPrintable
 import Language.Primitives.Io
 import Language.Primitives.IoAble
 
@@ -20,6 +21,6 @@ findWithDefault :: Ord a => a -> a -> PrimitiveMap a -> a
 findWithDefault def key (StandardMap map') = M.findWithDefault def key map'
 findWithDefault _ _ (IoMap Io) = undefined
 
-insert :: (IoAble a, Ord a) => a -> a -> PrimitiveMap a -> PrimitiveMap a
+insert :: (IoAble a, PrettyPrintable a, Ord a) => a -> a -> PrimitiveMap a -> PrimitiveMap a
 insert key value (StandardMap map') = StandardMap $ M.insert key value map'
 insert key value (IoMap Io) = seq (ioInsert key value) (IoMap Io)

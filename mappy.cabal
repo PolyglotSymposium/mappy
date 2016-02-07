@@ -21,6 +21,7 @@ library
   exposed-modules:     Mappy
                      , Repl
                      , Language.Ast
+                     , Language.Ast.PrettyPrinter
                      , Language.Desugar
                      , Language.Error
                      , Language.Error.PrettyPrinter

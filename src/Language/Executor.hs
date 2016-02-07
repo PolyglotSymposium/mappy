@@ -6,6 +6,7 @@ import qualified Data.Set as S
 import Control.Monad (liftM2)
 
 import Language.Ast
+import Language.Ast.PrettyPrinter
 import Language.Desugar
 import Language.Error
 import Language.Primitives
