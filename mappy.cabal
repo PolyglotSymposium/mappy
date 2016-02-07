@@ -1,5 +1,5 @@
 name:                mappy
-version:             0.1.2.0
+version:             0.1.2.1
 synopsis:            A functional programming language focused around maps.
 description:         Please see README.md
 homepage:            https://github.com/PolyglotSymposium/mappy
