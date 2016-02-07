@@ -245,6 +245,10 @@ spec = do
         it "parses correctly" $ do
           parseExpression "\\ x -> :foo" `shouldBe` Right (MappyLambda [MappyNamedValue "x"] (MappyKeyword "foo"))
 
+      describe "that has no arguments" $ do
+        it "parses correctly" $ do
+          parseExpression "\\ -> :foo" `shouldBe` Right (MappyLambda [] (MappyKeyword "foo"))
+
       describe "who has a lazy argument" $ do
         it "parses correctly" $ do
           parseExpression "\\(  x\t) -> :foo" `shouldBe` Right (MappyLambda [MappyLazyArgument "x"] (MappyKeyword "foo"))

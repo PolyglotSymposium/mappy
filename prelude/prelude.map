@@ -24,7 +24,7 @@ add a b = [
 ]
 
 two = [succ [succ zero]]
-four = [add two two]
+four = [succ [succ two]]
 
 identity a = a
 
@@ -149,88 +149,211 @@ expected-filter-list = [cons :c [cons :d nil]]
 always-true _ = true
 
 cases = (|
-  (:name :equal-for-keywords :assertion [equal? :foo :foo])
-  (:name :equal-for-equal-maps :assertion [equal? two two])
-  (:name :equal-for-non-equal-maps :assertion [not [equal? zero two]])
-  (:name :equal-for-functions :assertion [equal? cons cons])
-  (:name :cons-works :assertion [equal? [cons :foo nil] (:head :foo :tail ())])
-  (:name :add-works-for-trivial-case :assertion [equal? [add zero two] two])
-  (:name :add-works-for-harder-case :assertion [equal? [add two two] [succ [succ two]]])
-  (:name :first-class-functions :assertion [equal? [apply identity :foo] :foo])
-  (:name :map-for-trivial-case :assertion [equal? [map identity silly-list] silly-list])
-  (:name :map-for-harder-case :assertion [equal? [map silly-fn silly-list] expected-map-list])
-  (:name :filter-for-trivial-case :assertion [equal? [filter always-true silly-list] silly-list])
-  (:name :filter-for-harder-case :assertion [equal? [filter [. not empty?] silly-with-empties-list] silly-list])
-  (:name :compose-for-trivial-case :assertion [[. identity identity] true])
-  (:name :compose-for-harder-case :assertion [[. not not] true])
-  (:name :++-for-trivial-case :assertion [equal? [++ nil nil] nil])
-  (:name :++-for-harder-case :assertion [equal? [++ (|:a :b :c|) (|:d :e|)] (|:a :b :c :d :e|)])
-  (:name :concat-for-trivial-case :assertion [equal? [concat (| nil nil nil nil |)] nil])
-  (:name :concat-for-harder-case :assertion [equal? [concat (| (|:a :b :c|) (|:d :e|) (|:f|) |)] (|:a :b :c :d :e :f|)])
-  (:name :iterate-n-for-0 :assertion [equal? [iterate-n identity zero zero] nil])
-  (:name :iterate-n-for-1 :assertion [equal? [iterate-n identity zero (:pred zero)] (|zero|)])
-  (:name :iterate-n-for-n :assertion [equal? [iterate-n identity zero (:pred zero)] (|zero|)])
-  (:name :iterate-n-for-n
-    :assertion [equal?
-      [iterate-n succ zero four]
-      (|zero (:pred zero) two (:pred two)|)
-    ]
+  (
+    :testing :cons-works
+    :where (
+      :should-be :equal
+      :actual [cons :foo nil]
+      :expected (:head :foo :tail ())
+    )
   )
-  (:name :replicate-for-n :assertion [equal? [replicate four four] (|four four four four|)])
-  (:name :intersperse-for-empty :assertion [equal? [intersperse four nil] nil])
-  (:name :intersperse-for-singleton :assertion [equal? [intersperse four (|four|)] (|four|)])
-  (:name :intersperse-for-bigger-list
-    :assertion [equal?
-      [intersperse zero (|four four four|)]
-      (|four zero four zero four|)
-    ]
+  (
+    :testing :add-works-for-trivial-case
+    :where (
+      :should-be :equal
+      :actual [add zero two]
+      :expected two
+    )
   )
-  (:name :intercalate-for-empties
-    :assertion [equal?
-      [intercalate nil nil]
-      nil
-    ]
+  (
+    :testing :add-works-for-harder-case
+    :where (
+      :should-be :equal
+      :actual [add two two]
+      :expected four
+    )
   )
-  (:name :intercalate-for-non-trivial-case
-    :assertion [equal?
-      [intercalate ", " (|"hello" "world" "hi"|)]
-      "hello, world, hi"
-    ]
+  (
+    :testing :map-for-trivial-case
+    :where (
+      :should-be :equal
+      :actual [map identity silly-list]
+      :expected silly-list
+    )
   )
-  (:name :fold-for-empty-list
-    :assertion [equal?
-      [fold add four nil]
-      four
-    ]
+  (
+    :testing :map-for-harder-case
+    :where (
+      :should-be :equal
+      :actual [map silly-fn silly-list]
+      :expected expected-map-list
+    )
   )
-  (:name :fold-for-non-trivial-case
-    :assertion [equal?
-      [fold add zero (|two two four four|)]
-      [add four [add four four]]
-    ]
+  (
+    :testing :filter-for-trivial-case
+    :where (
+      :should-be :equal
+      :actual [filter always-true silly-list]
+      :expected silly-list
+    )
   )
-  (:name :reverse-for-empty :assertion [empty? [reverse nil]])
-  (:name :reverse-for-non-trivial-case
-    :assertion [equal?
-      [reverse (|zero two four|)]
-      (|four two zero|)
-    ]
+  (
+    :testing :filter-for-harder-case
+    :where (
+      :should-be :equal
+      :actual [filter [. not empty?] silly-with-empties-list]
+      :expected silly-list
+    )
   )
-  (:name :split-for-empty :assertion [empty? [split ',' nil]])
-  (:name :split-for-no-matches :assertion [equal? [split ',' "Hello"] (|"Hello"|)])
-  (:name :split-for-simple-matches :assertion [equal? [split ',' "a,b,c"] (|"a" "b" "c"|)])
-  (:name :split-for-match-on-the-end :assertion [equal? [split ',' "a,b,"] (|"a" "b"|)])
-  (:name :split-for-consecutive-matches :assertion [equal? [split ',' "a,,b"] (|"a" "" "b"|)])
+  (
+    :testing :compose-for-trivial-case
+    :where (
+      :should-be :equal
+      :actual [[. identity identity] true]
+      :expected true
+    )
+  )
+  (
+    :testing :compose-for-harder-case
+    :where (
+      :should-be :equal
+      :actual [[. not not] true]
+      :expected true
+    )
+  )
+  (:testing :++-for-trivial-case :where (:should-be :empty :value [++ nil nil]))
+  (
+    :testing :++-for-harder-case
+    :where (
+      :should-be :equal
+      :actual [++ (|:a :b :c|) (|:d :e|)]
+      :expected (|:a :b :c :d :e|)
+    )
+  )
+  (
+    :testing :concat-for-trivial-case
+    :where (
+      :should-be :empty
+      :value [concat (| nil nil nil nil |)]
+    )
+  )
+  (
+    :testing :concat-for-harder-case
+    :where (
+      :should-be :equal
+      :actual [concat (| (|:a :b :c|) (|:d :e|) (|:f|) |)]
+      :expected (|:a :b :c :d :e :f|)
+    )
+  )
+  (:testing :iterate-n-for-0 :where (:should-be :empty :value [iterate-n identity zero zero]))
+  (
+    :testing :iterate-n-for-1
+    :where (
+      :should-be :equal
+      :actual [iterate-n identity zero (:pred zero)]
+      :expected (|zero|)
+    )
+  )
+  (
+    :testing :iterate-n-for-n
+    :where (
+      :should-be :equal
+      :actual [iterate-n succ zero four]
+      :expected (|zero (:pred zero) two (:pred two)|)
+    )
+  )
+  (
+    :testing :replicate-for-n
+    :where (
+      :should-be :equal
+      :actual [replicate four four]
+      :expected (|four four four four|)
+    )
+  )
+  (:testing :intersperse-for-empty :where (:should-be :empty :value [intersperse four nil]))
+  (
+    :testing :intersperse-for-singleton
+    :where (
+      :should-be :equal
+      :actual [intersperse four (|four|)]
+      :expected (|four|)
+    )
+  )
+  (
+    :testing :intersperse-for-bigger-list
+    :where (
+      :should-be :equal
+      :actual [intersperse zero (|four four four|)]
+      :expected (|four zero four zero four|)
+    )
+  )
+  (
+    :testing :intercalate-for-empties
+    :where (:should-be :empty :value [intercalate nil nil])
+  )
+  (
+    :testing :intercalate-for-non-trivial-case
+    :where (
+      :should-be :equal
+      :actual [intercalate ", " (|"hello" "world" "hi"|)]
+      :expected "hello, world, hi"
+    )
+  )
+  (
+    :testing :fold-for-empty-list
+    :where (:should-be :equal :actual [fold add four nil] :expected four)
+  )
+  (
+    :testing :fold-for-non-trivial-case
+    :where (
+      :should-be :equal
+      :actual [fold add zero (|two two four four|)]
+      :expected [add four [add four four]]
+    )
+  )
+  (
+    :testing :reverse-on-empty
+    :where (:should-be :empty :value [reverse nil])
+  )
+  (
+    :testing :reverse-on-a-non-empty-list
+    :where (:should-be :equal :actual [reverse (|zero two four|)] :expected (|four two zero|))
+  )
+  (
+    :testing :split-on-empty
+    :where (:should-be :empty :value [split ',' nil])
+  )
+  (
+    :testing :split-for-no-matches
+    :where (:should-be :equal :actual [split ',' "Hello"] :expected (|"Hello"|))
+  )
+  (
+    :testing :split-for-simple-matches
+    :where (:should-be :equal :actual [split ',' "a,b,c"] :expected (|"a" "b" "c"|))
+  )
+  (
+    :testing :split-for-match-on-the-end
+    :where (:should-be :equal :actual [split ',' "a,b,"] :expected (|"a" "b"|))
+  )
+  (
+    :testing :split-for-consecutive-matches
+    :where (:should-be :equal :actual [split ',' "a,,b"] :expected (|"a" "" "b"|))
+  )
 |)
 
-taking key = \map -> [take key map]
-
-assertion-fails case = [
-  not [take :assertion case]
-]
+apply-case case =
+  let
+    assertion = [:where case]
+  in (
+    :passed [[take [:should-be [:where case]] (
+      :equal \ -> [equal? [:actual [:where case]] [:expected [:where case]]]
+      :empty \ -> [empty? [:value [:where case]]]
+    )]]
+    :show-on-fail (:name [:testing case] :reason [:where case])
+  )
 
 run-tests cases = [
-  map [taking :name] [filter assertion-fails cases]
+  map :show-on-fail [filter [. not :passed] [map apply-case cases]]
 ]
 
 main = [run-tests cases]
