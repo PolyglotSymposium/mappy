@@ -1,4 +1,13 @@
 module Language.Primitives.IoAble where
 
 class IoAble a where
-  meansPrint :: a -> Bool
+  classifyIo :: a -> Maybe IoOperationClassification
+  pluckInner :: a -> IoSelector -> a
+
+data IoOperationClassification =
+  IoPrint
+  | IoWriteFile
+
+data IoSelector =
+  IoFilename
+  | IoContents

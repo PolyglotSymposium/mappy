@@ -6,6 +6,7 @@ module Language.Ast (
   , SugaredExpression(..)
   ) where
 
+import qualified Data.Map.Strict as M
 import Language.Primitives.IoAble
 import Language.Primitives.Map
 
@@ -37,5 +38,11 @@ data Expression =
   deriving (Eq, Show, Ord)
 
 instance IoAble Expression where
-  meansPrint (MappyKeyword "print") = True
-  meansPrint _ = False
+  classifyIo (MappyKeyword "print") = Just IoPrint
+  classifyIo (MappyKeyword "write-file") = Just IoWriteFile
+  classifyIo _ = Nothing
+  pluckInner (MappyMap (StandardMap map')) IoFilename =
+    M.findWithDefault (error " - No file given in IO action") (MappyKeyword "file") map'
+  pluckInner (MappyMap (StandardMap map')) IoContents =
+    M.findWithDefault (error " - No file text given in IO action") (MappyKeyword "text") map'
+  pluckInner _ _ = error " - Non-map given in IO action"
