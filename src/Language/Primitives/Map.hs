@@ -13,9 +13,9 @@ data PrimitiveMap a =
   | StandardMap (M.Map a a)
   deriving (Eq, Show, Ord)
 
-lookup :: Ord a => a -> PrimitiveMap a -> Maybe a
+lookup :: (IoAble a, PrettyPrintable a, Ord a) => a -> PrimitiveMap a -> Maybe a
 lookup key (StandardMap map') = M.lookup key map'
-lookup _ (IoMap Io) = Nothing
+lookup key (IoMap Io) = ioLookup key
 
 findWithDefault :: Ord a => a -> a -> PrimitiveMap a -> a
 findWithDefault def key (StandardMap map') = M.findWithDefault def key map'

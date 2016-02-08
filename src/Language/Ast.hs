@@ -4,9 +4,13 @@ module Language.Ast (
   , PrimitiveMap(..)
   , SugaredDefinition(..)
   , SugaredExpression(..)
+  , mappyChar
+  , mappyNat
   ) where
 
+import Data.Char (ord)
 import qualified Data.Map.Strict as M
+
 import Language.Primitives.IoAble
 import Language.Primitives.Map
 
@@ -38,11 +42,32 @@ data Expression =
   deriving (Eq, Show, Ord)
 
 instance IoAble Expression where
-  classifyIo (MappyKeyword "print") = Just IoPrint
-  classifyIo (MappyKeyword "write-file") = Just IoWriteFile
-  classifyIo _ = Nothing
+  classifyOutput (MappyKeyword "print") = Just IoPrint
+  classifyOutput (MappyKeyword "write-file") = Just IoWriteFile
+  classifyOutput _ = Nothing
+  classifyInput (MappyMap (StandardMap map')) =
+    case M.lookup (MappyKeyword "read-file") map' of
+      Nothing -> Nothing
+      _ -> Just IoReadFile
+  classifyInput _ = Nothing
   pluckInner (MappyMap (StandardMap map')) IoFilename =
     M.findWithDefault (error " - No file given in IO action") (MappyKeyword "file") map'
   pluckInner (MappyMap (StandardMap map')) IoContents =
     M.findWithDefault (error " - No file text given in IO action") (MappyKeyword "text") map'
+  pluckInner (MappyMap (StandardMap map')) IoReadFileSel =
+    M.findWithDefault (error " - No file given in IO action") (MappyKeyword "read-file") map'
   pluckInner _ _ = error " - Non-map given in IO action"
+  fromString = mappyList . map mappyChar
+
+mappyList :: [Expression] -> Expression
+mappyList = MappyMap . StandardMap . go
+  where
+  go [] = M.empty
+  go (v:vs) = M.fromList [(MappyKeyword "head", v), (MappyKeyword "tail", MappyMap $ StandardMap $ go vs)]
+
+mappyChar :: Char -> Expression
+mappyChar c = mappyNat (ord c) $ M.singleton (MappyKeyword "__type") (MappyKeyword "char")
+
+mappyNat :: Int -> M.Map Expression Expression -> Expression
+mappyNat 0 extra = MappyMap $ StandardMap extra
+mappyNat n extra = MappyMap $ StandardMap $ M.insert (MappyKeyword "pred") (mappyNat (n -1 ) extra) extra
