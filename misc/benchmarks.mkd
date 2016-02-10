@@ -1,0 +1,11 @@
+# Char/String, with main as
+```
+main = [split ',' "This,is,a,test,this,string,is,really,not,that,large,at,least,it,shouldnt,be,~!@#$%^&*()_+=-[]{};:'><,./?"]
+```
+
+## Median of 5 runs
+```
+real	0m5.126s
+user	0m6.181s
+sys	0m2.715s
+```
