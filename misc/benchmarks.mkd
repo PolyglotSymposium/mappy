@@ -5,7 +5,7 @@ main = [split ',' "This,is,a,test,this,string,is,really,not,that,large,at,least,
 
 ## Median of 5 runs
 ```
-real	0m5.126s
-user	0m6.181s
-sys	0m2.715s
+real	0m2.967s
+user	0m3.725s
+sys	0m1.570s
 ```

@@ -65,9 +65,14 @@ mappyList = MappyMap . StandardMap . go
   go [] = M.empty
   go (v:vs) = M.fromList [(MappyKeyword "head", v), (MappyKeyword "tail", MappyMap $ StandardMap $ go vs)]
 
-mappyChar :: Char -> Expression
-mappyChar c = mappyNat (ord c) $ M.singleton (MappyKeyword "__type") (MappyKeyword "char")
+withTypeHint :: Expression -> String -> Expression
+withTypeHint (MappyMap (StandardMap map')) typeHint =
+  MappyMap $ StandardMap $ M.union (M.singleton (MappyKeyword "__type") $ MappyKeyword typeHint) map'
+withTypeHint v _ = v
 
-mappyNat :: Int -> M.Map Expression Expression -> Expression
-mappyNat 0 extra = MappyMap $ StandardMap extra
-mappyNat n extra = MappyMap $ StandardMap $ M.insert (MappyKeyword "pred") (mappyNat (n -1 ) extra) extra
+mappyChar :: Char -> Expression
+mappyChar c = (mappyNat (ord c)) `withTypeHint` "char"
+
+mappyNat :: Int -> Expression
+mappyNat 0 = MappyMap $ StandardMap M.empty
+mappyNat n = MappyMap $ StandardMap $ M.singleton (MappyKeyword "pred") $ mappyNat  $ n - 1
