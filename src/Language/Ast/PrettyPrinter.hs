@@ -21,6 +21,7 @@ instance PrettyPrintable Expression where
         "(" ++ unwords (map (\(k, v) -> pretty k ++ " " ++ pretty v) $ M.toList map') ++ ")"
       StringAsMap -> "\"" ++ stringInternal mm ++ "\""
       (RatioAsMap num denom) -> pretty num ++ "/" ++ pretty denom
+      (NatAsMap nat) -> show $ keyDepth nat $ MappyKeyword "pred"
   pretty (MappyMap (IoMap _)) = "__prim_io_map"
   pretty (MappyLambda args body) = "\\" ++ unwords (map pretty args) ++ " -> " ++ pretty body
   pretty (MappyClosure args body _) = "#closure[...]#" ++ pretty (MappyLambda args body)
@@ -31,18 +32,23 @@ data MapClassification =
   CharAsMap
   | ListAsMap
   | StringAsMap
+  | NatAsMap Expression
   | RatioAsMap Expression Expression
   | JustAMap
   deriving Eq
 
 classifyMap :: M.Map Expression Expression -> MapClassification
 classifyMap map' =
-  case map (\k -> M.lookup (MappyKeyword k) map') ["__type", "head", "tail", "numerator", "denominator"] of
-    [Just (MappyKeyword "char"), _, _, _, _] -> CharAsMap
-    [_, Just _, Just _, _, _] ->
-      if (MappyMap $ StandardMap map') `isListOf` CharAsMap then StringAsMap else ListAsMap
-    [_, _, _, Just num, Just denom] -> RatioAsMap num denom
-    _ -> JustAMap
+  if M.keys map' == [MappyKeyword "pred"]
+  then
+    NatAsMap $ MappyMap $ StandardMap map'
+  else
+    case map (\k -> M.lookup (MappyKeyword k) map') ["__type", "head", "tail", "numerator", "denominator"] of
+      [Just (MappyKeyword "char"), _, _, _, _] -> CharAsMap
+      [_, Just _, Just _, _, _] ->
+        if (MappyMap $ StandardMap map') `isListOf` CharAsMap then StringAsMap else ListAsMap
+      [_, _, _, Just num, Just denom] -> RatioAsMap num denom
+      _ -> JustAMap
 
 isListOf :: Expression -> MapClassification -> Bool
 isListOf (MappyMap (StandardMap map')) cls =
@@ -69,6 +75,14 @@ stringInternal (MappyMap (StandardMap map')) =
     [Just k, Just rest] -> charInternal k ++ stringInternal rest
     _ -> ""
 stringInternal _ = errorInMappy "Attempted to sugar a non-string into a string."
+
+keyDepth :: Expression -> Expression -> Int
+keyDepth (MappyMap (StandardMap map')) key =
+  case M.lookup key map' of
+    Just next -> 1 + keyDepth next key
+    Nothing -> 0
+keyDepth _ _ = errorInMappy "keyDepth called on non-map."
+
 
 fromBinary :: Expression -> Int
 fromBinary = go 0 0
