@@ -6,6 +6,7 @@ module Language.Ast (
   , SugaredExpression(..)
   , mappyChar
   , mappyNat
+  , mappyList
   ) where
 
 import Data.Char (ord)
@@ -57,13 +58,13 @@ instance IoAble Expression where
   pluckInner (MappyMap (StandardMap map')) IoReadFileSel =
     M.findWithDefault (error " - No file given in IO action") (MappyKeyword "read-file") map'
   pluckInner _ _ = error " - Non-map given in IO action"
-  fromString = mappyList . map mappyChar
+  fromString = mappyList id . map mappyChar
 
-mappyList :: [Expression] -> Expression
-mappyList = MappyMap . StandardMap . go
+mappyList :: (Expression -> Expression) -> [Expression] -> Expression
+mappyList f = MappyMap . StandardMap . go
   where
   go [] = M.empty
-  go (v:vs) = M.fromList [(MappyKeyword "head", v), (MappyKeyword "tail", MappyMap $ StandardMap $ go vs)]
+  go (v:vs) = M.fromList [(MappyKeyword "head", f v), (MappyKeyword "tail", MappyMap $ StandardMap $ go vs)]
 
 withTypeHint :: Expression -> String -> Expression
 withTypeHint (MappyMap (StandardMap map')) typeHint =

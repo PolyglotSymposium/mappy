@@ -20,9 +20,7 @@ desugarExpr (ExprSugar (SugaredLet defs body)) =
     body' = desugarExpr body
   in
     defsToLambda defs' body'
-desugarExpr (ExprSugar (SugaredList [])) = MappyNamedValue "nil"
-desugarExpr (ExprSugar (SugaredList (v:vs))) =
-  MappyApp (MappyNamedValue "cons") [desugarExpr v, desugarExpr $ ExprSugar $ SugaredList vs]
+desugarExpr (ExprSugar (SugaredList values)) = mappyList desugarExpr values
 desugarExpr (ExprSugar (SugaredString str)) =
   desugarExpr $ ExprSugar $ SugaredList $ map (desugarExpr . ExprSugar . SugaredChar) str
 desugarExpr (ExprSugar (SugaredChar c)) = mappyChar c

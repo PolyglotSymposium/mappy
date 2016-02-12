@@ -7,7 +7,12 @@ import Language.Desugar
 
 import Data.Map.Strict as M
 
-cons e r = MappyApp (MappyNamedValue "cons") [e, r]
+emptyMap = MappyMap $ StandardMap M.empty
+
+cons e r = MappyMap $ StandardMap $ M.fromList [
+  (MappyKeyword "head",  e)
+  , (MappyKeyword "tail", r)
+  ]
 
 typeHint (MappyMap (StandardMap map)) = M.lookup (MappyKeyword "__type") map
 
@@ -15,17 +20,6 @@ hasDepthDownKey (MappyMap (StandardMap map)) depth nextKey =
   case M.lookup nextKey map of
     Just next -> hasDepthDownKey next (depth - 1) nextKey
     Nothing -> depth == 0
-
-hasNCons (MappyApp (MappyNamedValue "cons") [_, v]) depth = hasNCons v $ depth - 1
-hasNCons (MappyNamedValue "nil") depth = depth == 0
-hasNCons a _ = False
-
-hasCharsDown (MappyApp (MappyNamedValue "cons") [v, rest]) (v':vs) =
-  typeHint v == Just (MappyKeyword "char") &&
-  hasDepthDownKey v v' (MappyKeyword "pred")  &&
-  hasCharsDown rest vs
-hasCharsDown (MappyNamedValue "nil") _ = True
-hasCharsDown  _ _ = False
 
 spec :: Spec
 spec = do
@@ -46,11 +40,9 @@ spec = do
         string = ExprSugar $ SugaredString "012"
         desugared = desugarExpr string
 
-      it "desugars to a list, having the correct number of elements" $ do
-        hasNCons desugared 3 `shouldBe` True
-
       it "desugars to a list, having the correct elements" $ do
-        hasCharsDown desugared [48, 49, 50] `shouldBe` True
+        desugared `shouldBe`
+          (cons (mappyChar '0') $ cons (mappyChar '1') $ cons (mappyChar '2') emptyMap)
 
     describe "given a character" $ do
       let
@@ -66,17 +58,17 @@ spec = do
     describe "given an empty sugared list" $ do
       let code = ExprSugar $ SugaredList []
 
-      it "desugars to nil" $ do
-        desugarExpr code `shouldBe` MappyNamedValue "nil"
+      it "desugars to an empty map" $ do
+        desugarExpr code `shouldBe` emptyMap
 
     describe "given a sugared list with some values" $ do
       let code = ExprSugar $ SugaredList [MappyKeyword "foo", MappyNamedValue "bar"]
 
-      it "desugars to cons applied ending in nil" $ do
-        desugarExpr code `shouldBe` (cons (MappyKeyword "foo") $ cons (MappyNamedValue "bar") (MappyNamedValue "nil"))
+      it "desugars to a head tail structure, ending in the empty map" $ do
+        desugarExpr code `shouldBe` (cons (MappyKeyword "foo") $ cons (MappyNamedValue "bar") emptyMap)
 
     describe "given a sugared list a nested sugared list" $ do
       let code = ExprSugar $ SugaredList [ExprSugar $ SugaredList []]
 
       it "desugars all lists" $ do
-        desugarExpr code `shouldBe` (cons (MappyNamedValue "nil") (MappyNamedValue "nil"))
+        desugarExpr code `shouldBe` (cons emptyMap emptyMap)
