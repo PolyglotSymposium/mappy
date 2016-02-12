@@ -16,10 +16,8 @@ cons e r = MappyMap $ StandardMap $ M.fromList [
 
 typeHint (MappyMap (StandardMap map)) = M.lookup (MappyKeyword "__type") map
 
-hasDepthDownKey (MappyMap (StandardMap map)) depth nextKey =
-  case M.lookup nextKey map of
-    Just next -> hasDepthDownKey next (depth - 1) nextKey
-    Nothing -> depth == 0
+withoutTypeHint (MappyMap (StandardMap map)) =
+  MappyMap $ StandardMap $ M.delete (MappyKeyword "__type") map
 
 spec :: Spec
 spec = do
@@ -45,15 +43,14 @@ spec = do
           (cons (mappyChar '0') $ cons (mappyChar '1') $ cons (mappyChar '2') emptyMap)
 
     describe "given a character" $ do
-      let
-        char = ExprSugar $ SugaredChar '0'
-        desugared = desugarExpr char
+      let char = ExprSugar $ SugaredChar '*'
 
-      it "desugars as a nat, with the same value" $ do
-        hasDepthDownKey desugared 48 (MappyKeyword "pred") `shouldBe` True
+      it "desugars as \"binary\", with the same value" $ do
+        (withoutTypeHint $ desugarExpr char) `shouldBe`
+          (cons mappyZero (cons mappyOne (cons mappyZero (cons mappyOne (cons mappyZero (cons mappyOne emptyMap))))))
 
-      it "desugars as a nat, with the :__type :char key at the top level" $ do
-        typeHint desugared `shouldBe` (Just $ MappyKeyword "char")
+      it "has the :__type :char key at the top level" $ do
+        typeHint (desugarExpr char) `shouldBe` (Just $ MappyKeyword "char")
 
     describe "given an empty sugared list" $ do
       let code = ExprSugar $ SugaredList []

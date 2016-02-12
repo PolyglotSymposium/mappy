@@ -1,5 +1,6 @@
 module Language.Ast.PrettyPrinter where
 
+import Data.Bits
 import Data.Char (chr)
 import qualified Data.Map.Strict as M
 
@@ -57,7 +58,7 @@ sugarList (MappyMap (StandardMap map')) =
 sugarList _ = errorInMappy "Attempted to sugar a non-list into a list."
 
 charInternal :: Expression -> String
-charInternal mm = [chr $ keyDepth mm $ MappyKeyword "pred"]
+charInternal mm = [chr $ fromBinary mm]
 
 stringInternal :: Expression -> String
 stringInternal (MappyMap (StandardMap map')) =
@@ -66,9 +67,11 @@ stringInternal (MappyMap (StandardMap map')) =
     _ -> ""
 stringInternal _ = errorInMappy "Attempted to sugar a non-string into a string."
 
-keyDepth :: Expression -> Expression -> Int
-keyDepth (MappyMap (StandardMap map')) key =
-  case M.lookup key map' of
-    Just next -> 1 + keyDepth next key
-    Nothing -> 0
-keyDepth _ _ = errorInMappy "keyDepth called on non-map."
+fromBinary :: Expression -> Int
+fromBinary = go 0 0
+  where
+  exprToBit expr = if expr == mappyZero then 0 else 1
+  go pos acc (MappyMap (StandardMap map')) =
+    case (M.lookup (MappyKeyword "head") map', M.lookup (MappyKeyword "tail") map') of
+      (Just v, Just rest) -> go (pos + 1) ((.|.) acc $ shiftL (exprToBit v) pos) rest
+      _ -> acc

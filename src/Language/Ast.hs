@@ -7,8 +7,11 @@ module Language.Ast (
   , mappyChar
   , mappyNat
   , mappyList
+  , mappyZero
+  , mappyOne
   ) where
 
+import Data.Bits
 import Data.Char (ord)
 import qualified Data.Map.Strict as M
 
@@ -72,8 +75,23 @@ withTypeHint (MappyMap (StandardMap map')) typeHint =
 withTypeHint v _ = v
 
 mappyChar :: Char -> Expression
-mappyChar c = (mappyNat (ord c)) `withTypeHint` "char"
+mappyChar c = toBinary (ord c) `withTypeHint` "char"
 
 mappyNat :: Int -> Expression
 mappyNat 0 = MappyMap $ StandardMap M.empty
 mappyNat n = MappyMap $ StandardMap $ M.singleton (MappyKeyword "pred") $ mappyNat  $ n - 1
+
+toBinary :: Int -> Expression
+toBinary = mappyList id . go
+  where
+  single 0 = mappyZero
+  single 1 = mappyOne
+  go 0 = []
+  go 1 = [mappyOne]
+  go n = (single $ 1 .&. n):go (shiftR n 1)
+
+mappyZero :: Expression
+mappyZero = MappyMap $ StandardMap M.empty
+
+mappyOne :: Expression
+mappyOne = MappyMap $ StandardMap $ M.singleton (MappyKeyword "pred") mappyZero
