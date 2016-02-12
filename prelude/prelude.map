@@ -31,6 +31,12 @@ mult a b = [
       [add a [mult a [pred b]]]]
 ]
 
+pow base exponent = [
+  if [equal? zero exponent]
+    one
+    [mult base [pow base [pred exponent]]]
+]
+
 div dividend divisor = (
   :numerator dividend
   :denominator divisor
@@ -218,6 +224,30 @@ cases = (|
       :should-be :equal
       :actual [mult two four]
       :expected [succ [succ [succ [succ four]]]]
+    )
+  )
+  (
+    :testing :pow-of-zero
+    :where (
+      :should-be :equal
+      :actual [pow four zero]
+      :expected one
+    )
+  )
+  (
+    :testing :pow-of-one
+    :where (
+      :should-be :equal
+      :actual [pow four one]
+      :expected four
+    )
+  )
+  (
+    :testing :pow-for-less-trivial-case
+    :where (
+      :should-be :equal
+      :actual [pow [succ two] two]
+      :expected [succ [succ [succ [succ [succ four]]]]]
     )
   )
   (
