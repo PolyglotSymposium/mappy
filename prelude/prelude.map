@@ -23,11 +23,20 @@ add a b = [
     [succ [add [pred a] b]]
 ]
 
+mult a b = [
+  if [elem? (|a b|) zero]
+    zero
+    [if [elem? (|a b|) one]
+      [take one (a b b a)]
+      [add a [mult a [pred b]]]]
+]
+
 div dividend divisor = (
   :numerator dividend
   :denominator divisor
 )
 
+one = [succ zero]
 two = [succ [succ zero]]
 four = [succ [succ two]]
 
@@ -40,6 +49,15 @@ const a = \_ -> a
 nil = ()
 
 cons value list = (:head value :tail list)
+
+-- elem? : list a -> a -> bool
+elem? values a = [
+  if [empty? values]
+    false
+    [if [equal? [:head values] a]
+      true
+      [elem? [:tail values] a]]
+]
 
 -- ++ : list a -> list a -> list a
 ++ as bs = [
@@ -176,6 +194,30 @@ cases = (|
       :should-be :equal
       :actual [add two two]
       :expected four
+    )
+  )
+  (
+    :testing :mult-for-zeroes
+    :where (
+      :should-be :equal
+      :actual (| [mult zero four] [mult four zero] |)
+      :expected (|zero zero|)
+    )
+  )
+  (
+    :testing :mult-for-ones
+    :where (
+      :should-be :equal
+      :actual (| [mult one four] [mult four one] |)
+      :expected (|four four|)
+    )
+  )
+  (
+    :testing :mult-for-a-less-trivial-case
+    :where (
+      :should-be :equal
+      :actual [mult two four]
+      :expected [succ [succ [succ [succ four]]]]
     )
   )
   (
