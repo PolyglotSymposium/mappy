@@ -20,6 +20,7 @@ instance PrettyPrintable Expression where
       JustAMap ->
         "(" ++ unwords (map (\(k, v) -> pretty k ++ " " ++ pretty v) $ M.toList map') ++ ")"
       StringAsMap -> "\"" ++ stringInternal mm ++ "\""
+      (RatioAsMap num denom) -> pretty num ++ "/" ++ pretty denom
   pretty (MappyMap (IoMap _)) = "__prim_io_map"
   pretty (MappyLambda args body) = "\\" ++ unwords (map pretty args) ++ " -> " ++ pretty body
   pretty (MappyClosure args body _) = "#closure[...]#" ++ pretty (MappyLambda args body)
@@ -30,15 +31,17 @@ data MapClassification =
   CharAsMap
   | ListAsMap
   | StringAsMap
+  | RatioAsMap Expression Expression
   | JustAMap
   deriving Eq
 
 classifyMap :: M.Map Expression Expression -> MapClassification
 classifyMap map' =
-  case map (\k -> M.lookup (MappyKeyword k) map') ["__type", "head", "tail"] of
-    [Just (MappyKeyword "char"), _, _] -> CharAsMap
-    [_, Just _, Just _] ->
+  case map (\k -> M.lookup (MappyKeyword k) map') ["__type", "head", "tail", "numerator", "denominator"] of
+    [Just (MappyKeyword "char"), _, _, _, _] -> CharAsMap
+    [_, Just _, Just _, _, _] ->
       if (MappyMap $ StandardMap map') `isListOf` CharAsMap then StringAsMap else ListAsMap
+    [_, _, _, Just num, Just denom] -> RatioAsMap num denom
     _ -> JustAMap
 
 isListOf :: Expression -> MapClassification -> Bool

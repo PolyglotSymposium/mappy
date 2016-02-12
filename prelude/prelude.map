@@ -23,6 +23,11 @@ add a b = [
     [succ [add [pred a] b]]
 ]
 
+div dividend divisor = (
+  :numerator dividend
+  :denominator divisor
+)
+
 two = [succ [succ zero]]
 four = [succ [succ two]]
 
