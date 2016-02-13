@@ -31,6 +31,21 @@ mult a b = [
       [add a [mult a [pred b]]]]
 ]
 
+digit-char->nat c = [
+  take c (
+    '0' zero,
+    '1' one,
+    '2' two,
+    '3' three,
+    '4' four,
+    '5' [succ four],
+    '6' [add three three],
+    '7' [add four three],
+    '8' [add four four],
+    '9' [add four [succ four]]
+  )
+]
+
 pow base exponent = [
   if [equal? zero exponent]
     one
@@ -533,7 +548,15 @@ cases = (|
     :where (
       :should-be :equal
       :actual [first-n four [cycle (| :a :b |)]]
-      :expected (| :a :b :a :b|)
+      :expected (| :a :b :a :b |)
+    )
+  )
+  (
+    :testing :digit-char->nat-for-each-digit-char
+    :where (
+      :should-be :equal
+      :actual [map digit-char->nat "0123456789"]
+      :expected (| zero one two three four [succ four] [add three three] [add four three] [add four four] [add four [succ four]]|)
     )
   )
 |)
