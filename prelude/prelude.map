@@ -146,6 +146,12 @@ split delim vs =
   in
     [go vs nil]
 
+-- repeat : a -> stream a
+repeat v = \ -> (
+  :value v
+  :next [repeat v]
+)
+
 apply fn v = [fn v]
 
 assert c = [if c :pass :fail]
@@ -415,6 +421,22 @@ cases = (|
   (
     :testing :split-for-consecutive-matches
     :where (:should-be :equal :actual [split ',' "a,,b"] :expected (|"a" "" "b"|))
+  )
+  (
+    :testing "`repeat` returns a stream whose first value is the repeated value"
+    :where (
+      :should-be :equal
+      :actual [:value [[repeat :foo]]]
+      :expected :foo
+    )
+  )
+  (
+    :testing "`repeat` returns a stream whose next value looks a lot like the first"
+    :where (
+      :should-be :equal
+      :actual [:value [[:next [[repeat :foo]]]]]
+      :expected :foo
+    )
   )
 |)
 
