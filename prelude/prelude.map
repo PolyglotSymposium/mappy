@@ -43,12 +43,13 @@ div dividend divisor = (
 )
 
 one = [succ zero]
-two = [succ [succ zero]]
-four = [succ [succ two]]
+two = [succ one]
+three = [succ two]
+four = [succ three]
 
 identity a = a
 
-const a = \_ -> a
+const a _ = a
 
 . f g = \x -> [f [g x]]
 
@@ -161,6 +162,12 @@ first-n n stream = [
     in
       [cons [:value unboxed] [first-n [pred n] [:next unboxed]]]
 ]
+
+-- iterate : (a -> a) -> a -> stream a
+iterate f v = \ -> (
+  :value v
+  :next [iterate f [f v]]
+)
 
 apply fn v = [fn v]
 
@@ -462,6 +469,22 @@ cases = (|
       :should-be :equal
       :actual [first-n four [repeat :foo]]
       :expected (| :foo :foo :foo :foo |)
+    )
+  )
+  (
+    :testing :iterate-given-a-trivial-function
+    :where (
+      :should-be :equal
+      :actual [first-n four [iterate identity :foo]]
+      :expected (| :foo :foo :foo :foo |)
+    )
+  )
+  (
+    :testing :iterate-given-a-less-trivial-function
+    :where (
+      :should-be :equal
+      :actual [first-n four [iterate succ zero]]
+      :expected (| zero one two three |)
     )
   )
 |)
