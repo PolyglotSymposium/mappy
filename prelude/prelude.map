@@ -433,4 +433,6 @@ run-tests cases = [
   map :show-on-fail [filter [. not :passed] [map apply-case cases]]
 ]
 
+io = __prim_io_map
+
 main = [run-tests cases]

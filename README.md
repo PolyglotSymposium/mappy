@@ -32,6 +32,11 @@ run the [prelude](prelude/prelude.map), run
 mappy prelude/prelude.map
 ```
 
+## Hello, world
+```
+main = [give :print "Hello, World" io]
+```
+
 ## Values
 For less contrived examples, see the [prelude](prelude/prelude.map).
 
@@ -137,6 +142,43 @@ the-first-value = [first :a :b]
 ```
 this applies the `first` function, defined above, to `:a` and `:b` and binds
 the name `the-first-value` to the result.
+
+#### Partial application
+In mappy, functions are automatically partially applied if too few arguments
+are given. This feature, is well aligned with functional programming because
+it allows us to easily build new functions from existing ones.
+
+For example, suppose we wanted to build a function that adds two to a number.
+We might do so like thus
+```
+add-two num = [add two num]
+```
+
+This is pretty nice, but in mappy it can get more elegantly
+```
+add-two = [add two]
+```
+
+### IO
+In mappy, IO is done using the special `io` map, using the [core primitives](#core-primitives).
+
+#### Printing
+To print a value, use `give`
+```
+[give :print "Hi, from mappy!" io]
+```
+
+#### Writing a file
+To write a file, use `give`
+```
+[give :write-file (:text "File content", :file "out.txt") io]
+```
+
+#### Reading a file
+To read a file, use `take`
+```
+[take (:read-file "README.md") io]
+```
 
 ### Lambda functions
 To create a lambda function the syntax `\arg1 arg2 argN -> body` is used, where
