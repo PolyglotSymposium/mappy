@@ -163,6 +163,13 @@ first-n n stream = [
       [cons [:value unboxed] [first-n [pred n] [:next unboxed]]]
 ]
 
+-- drop-n : nat -> stream a -> stream a
+drop-n n stream = [
+  if [equal? zero n]
+    stream
+    [drop-n [pred n] [:next [stream]]]
+]
+
 -- iterate : (a -> a) -> a -> stream a
 iterate f v = \ -> (
   :value v
@@ -485,6 +492,22 @@ cases = (|
       :should-be :equal
       :actual [first-n four [iterate succ zero]]
       :expected (| zero one two three |)
+    )
+  )
+  (
+    :testing :drop-n-given-0
+    :where (
+      :should-be :equal
+      :actual [first-n four [drop-n zero [iterate succ zero]]]
+      :expected (| zero one two three |)
+    )
+  )
+  (
+    :testing :drop-n-given-n
+    :where (
+      :should-be :equal
+      :actual [first-n four [drop-n four [iterate succ zero]]]
+      :expected (| four [succ four] [succ [succ four]] [succ [succ [succ four]]] |)
     )
   )
 |)
