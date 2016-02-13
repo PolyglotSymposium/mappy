@@ -152,6 +152,16 @@ repeat v = \ -> (
   :next [repeat v]
 )
 
+-- first-n : nat -> stream a -> list a
+first-n n stream = [
+  if [equal? zero n]
+    nil
+    let
+      unboxed = [stream]
+    in
+      [cons [:value unboxed] [first-n [pred n] [:next unboxed]]]
+]
+
 apply fn v = [fn v]
 
 assert c = [if c :pass :fail]
@@ -423,7 +433,7 @@ cases = (|
     :where (:should-be :equal :actual [split ',' "a,,b"] :expected (|"a" "" "b"|))
   )
   (
-    :testing "`repeat` returns a stream whose first value is the repeated value"
+    :testing :repeat-returns-a-stream-whose-first-value-is-the-repeated-value
     :where (
       :should-be :equal
       :actual [:value [[repeat :foo]]]
@@ -431,11 +441,27 @@ cases = (|
     )
   )
   (
-    :testing "`repeat` returns a stream whose next value looks a lot like the first"
+    :testing :repeat-returns-a-stream-whose-next-value-looks-a-lot-like-the-first
     :where (
       :should-be :equal
       :actual [:value [[:next [[repeat :foo]]]]]
       :expected :foo
+    )
+  )
+  (
+    :testing :first-n-given-zero
+    :where (
+      :should-be :equal
+      :actual [first-n zero [repeat :foo]]
+      :expected nil
+    )
+  )
+  (
+    :testing :first-n-given-n
+    :where (
+      :should-be :equal
+      :actual [first-n four [repeat :foo]]
+      :expected (| :foo :foo :foo :foo |)
     )
   )
 |)
