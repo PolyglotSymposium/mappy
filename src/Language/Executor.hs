@@ -75,10 +75,13 @@ applyNonPrim :: Expression -> [Expression] -> Env -> Expression -> FullyEvaluate
 applyNonPrim nonPrim args env closure@(MappyClosure argNames body closedEnv) = do
   env' <- extendEnvironment (take n argNames) (take n args) closedEnv env
   case compare (length argNames) n of
-    LT -> Left [WrongNumberOfArguments "#closure#" (length argNames) n]
+    LT -> Left [WrongNumberOfArguments (getName nonPrim) (length argNames) n]
     GT -> return $ MappyClosure (drop n argNames) body env'
     EQ -> eval env' body
-  where n = length args
+  where
+    n = length args
+    getName (MappyNamedValue name) = name
+    getName _ = "#closure#"
 
 applyNonPrim _ args env kwd@(MappyKeyword _) =
   eval env $ MappyApp (MappyNamedValue "take") (kwd:args)

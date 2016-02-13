@@ -98,13 +98,18 @@ spec = do
 
       describe "with too many arguments" $ do
         let
-          code = [
+          code fn = [
             lambda
-            , def_main $ MappyApp (MappyNamedValue "const") [MappyKeyword "a", MappyKeyword "b", MappyKeyword "c"]
+            , def_main $ MappyApp fn [MappyKeyword "a", MappyKeyword "b", MappyKeyword "c"]
             ]
 
-        it "errors with a WrongNumberOfArguments error" $ do
-          exec code `shouldBe` Left [WrongNumberOfArguments "#closure#" 2 3]
+        describe "and a named function" $ do
+          it "errors with a WrongNumberOfArguments, carrying the name forward" $ do
+            exec (code $ MappyNamedValue "const") `shouldBe` Left [WrongNumberOfArguments "const" 2 3]
+
+        describe "and an anonymous function" $ do
+          it "errors with a WrongNumberOfArguments giving a generic name to the function" $ do
+            exec (code $ MappyLambda [] $ MappyKeyword "a") `shouldBe` Left [WrongNumberOfArguments "#closure#" 0 3]
 
       describe "with the correct number of argument" $ do
         let
