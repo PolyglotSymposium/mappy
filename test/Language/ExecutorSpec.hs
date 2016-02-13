@@ -41,6 +41,16 @@ spec = do
       it "reduces until the final value" $ do
         exec code `shouldBe` Right (MappyKeyword "c")
 
+    describe "the application of a lambda" $ do
+      let
+        lambda = MappyLambda (map MappyNamedValue ["a", "b"]) $ MappyNamedValue "a"
+        code = [
+          def_main $ MappyApp lambda [MappyKeyword "a", MappyKeyword "b"]
+          ]
+
+      it "executes correctly" $ do
+        exec code `shouldBe` (Right $ MappyKeyword "a")
+
     describe "the application of a non-function or keyword" $ do
       let
         code appliedTo = [

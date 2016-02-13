@@ -277,6 +277,21 @@ spec = do
             parseExpression ("\\x -> " ++ body) `shouldBe` Right (MappyLambda [MappyNamedValue "x"] expected)
 
     describe "when parsing function applications" $ do
+
+      describe "where the function is a lambda literal" $ do
+        let
+          result = parseExpression "[\\a b -> a foo]"
+          (Right (MappyApp fn args)) = result
+
+        it "parses successfully" $ do
+          result `shouldSatisfy` isRight
+
+        it "parses the lambda correctly" $ do
+          fn `shouldBe` (MappyLambda (map MappyNamedValue ["a", "b"]) $ MappyNamedValue "a")
+
+        it "parses application's arguments correctly" $ do
+          args `shouldBe` [MappyNamedValue "foo"]
+
       describe "where the function is a keyword" $ do
         it "parses correctly" $ do
           property $ \(ValidIdentifier name) ->

@@ -120,7 +120,7 @@ map' = MappyMap <$> StandardMap <$>
 application :: Parser Expression
 application = (between (char '[') (char ']') $ do
     whiteSpace
-    fn <- namedValue <|> application <|> keyword
+    fn <- namedValue <|> application <|> keyword <|> lambda
     whiteSpace
     args <- expression `sepEndBy` whiteSpace
     return $ MappyApp fn args) <?> "application"
