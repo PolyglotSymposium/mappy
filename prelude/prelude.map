@@ -94,19 +94,19 @@ replicate n v = [
     [cons v [replicate [pred n] v]]
 ]
 
+-- prepend-all : a -> list a -> list a
+prepend-all sep vs = [
+  if [empty? vs]
+    nil
+    [cons sep [cons [:head vs] [prepend-all sep [:tail vs]]]]
+]
+
 -- intersperse : a -> list a -> list a
-intersperse sep values =
-  let
-    prepend-all vs = [
-      if [empty? vs]
-        nil
-        [cons sep [cons [:head vs] [prepend-all [:tail vs]]]]
-    ]
-  in [
-    if [empty? values]
-      nil
-      [cons [:head values] [prepend-all [:tail values]]]
-  ]
+intersperse sep values =[
+  if [empty? values]
+    nil
+    [cons [:head values] [prepend-all sep [:tail values]]]
+]
 
 -- intercalate : list a -> list (list a) -> list a
 intercalate sep vs = [concat [intersperse sep vs]]
@@ -118,40 +118,50 @@ fold f init vs = [
     [f [:head vs] [fold f init [:tail vs]]]
 ]
 
+-- private
+reverse-into vs acc = [
+  if [empty? vs]
+    acc
+    [reverse-into [:tail vs] [cons [:head vs] acc]]
+]
+
 -- reverse : list a -> list a
-reverse vs =
-  let
-    go vs acc = [
-      if [empty? vs]
-        acc
-        [go [:tail vs] [cons [:head vs] acc]]
+reverse vs = [reverse-into vs nil]
+
+-- private
+split-aux vs acc = [
+  if [empty? vs]
+    [if [empty? acc] nil (|[reverse acc]|)]
+    let
+      first = [:head vs]
+      rest = [:tail vs]
+    in [
+      if [equal? delim first]
+        [cons [reverse acc] [split-aux rest nil]]
+        [split-aux rest [cons first acc]]
     ]
-  in
-    [go vs nil]
+]
 
 -- split: a -> list a -> list (list a)
-split delim vs =
-  let
-    go vs acc = [
-      if [empty? vs]
-        [if [empty? acc] nil (|[reverse acc]|)]
-        let
-          first = [:head vs]
-          rest = [:tail vs]
-        in [
-          if [equal? delim first]
-            [cons [reverse acc] [go rest nil]]
-            [go rest [cons first acc]]
-        ]
-    ]
-  in
-    [go vs nil]
+split delim vs = [split-aux vs nil]
 
 -- repeat : a -> stream a
 repeat v = \ -> (
   :value v
   :next [repeat v]
 )
+
+-- private
+cycle-aux vs values = [
+  if [empty? vs]
+    [cycle-aux values values]
+    \ -> (
+      :value [:head vs]
+      :next [cycle-aux [:tail vs] values]
+    )
+]
+
+cycle values = [cycle-aux values values]
 
 -- first-n : nat -> stream a -> list a
 first-n n stream = [
@@ -508,6 +518,22 @@ cases = (|
       :should-be :equal
       :actual [first-n four [drop-n four [iterate succ zero]]]
       :expected (| four [succ four] [succ [succ four]] [succ [succ [succ four]]] |)
+    )
+  )
+  (
+    :testing :cycle-given-a-single-element
+    :where (
+      :should-be :equal
+      :actual [first-n four [cycle (| :foo |)]]
+      :expected (| :foo :foo :foo :foo |)
+    )
+  )
+  (
+    :testing :cycle-given-multiple-elements
+    :where (
+      :should-be :equal
+      :actual [first-n four [cycle (| :a :b |)]]
+      :expected (| :a :b :a :b|)
     )
   )
 |)

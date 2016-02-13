@@ -11,7 +11,8 @@ desugarEachDef (DefSugar sugared) = desugarDef sugared
 desugarEachDef (MappyDef name body) = MappyDef name $ desugarExpr body
 
 desugarDef :: SugaredDefinition -> Definition
-desugarDef (SugaredFnDefinition name args body) = MappyDef name $ MappyLambda args $ desugarExpr body
+desugarDef (SugaredFnDefinition name args body) =
+  MappyDef name $ MappyLambda args $ desugarExpr body
 
 desugarExpr :: Expression -> Expression
 desugarExpr (ExprSugar (SugaredLet defs body)) =

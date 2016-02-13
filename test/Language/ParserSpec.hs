@@ -184,12 +184,6 @@ spec = do
         it "parses the sugared expression" $ do
           parseExpression char `shouldBe` (Right $ ExprSugar $ SugaredChar expected)
 
-    describe "when parsing a let expression with no definitions" $ do
-      let code = "let in :foo"
-
-      it "fails to parse" $ do
-        parseExpression code `shouldSatisfy` isLeft
-
     describe "when parsing a list with extraneous whitespace" $ do
       let code = "(|\t\t   \t\n   \n|)"
 
@@ -212,25 +206,49 @@ spec = do
           (Right (ExprSugar (SugaredList exprs))) = parseExpression code
         exprs `shouldBe` []
 
-    describe "when parsing a let expression with multiple cases" $ do
-      let code = "let a = :foo b = :baz c = :bar in [to-foo a b c]"
-
-      it "parses the sugared expression" $ do
+    describe "when parsing a let expression" $ do
+      describe "with a simple function definition" $ do
         let
-          (Right (ExprSugar (SugaredLet defs (MappyApp (MappyNamedValue name) args)))) = parseExpression code
-        (length defs, name, length args) `shouldBe` (3, "to-foo", 3)
+          code = "let first a b = a in [first :foo :bar]"
+          (Right (ExprSugar (SugaredLet [def] body))) = parseExpression code
 
-    describe "when parsing a let expression with one case" $ do
-      let code = "let a = :foo in a"
+        it "correctly parses the let's body" $ do
+          body `shouldBe` (MappyApp (MappyNamedValue "first") [MappyKeyword "foo", MappyKeyword "bar"]) 
 
-      it "parses the sugared expression" $ do
-        parseExpression code `shouldBe` (Right $ ExprSugar $ SugaredLet [MappyDef (MappyNamedValue "a") (MappyKeyword "foo")] (MappyNamedValue "a"))
+        describe "the parsed function definition" $ do
+          let (DefSugar (SugaredFnDefinition name args body)) = def
 
-    describe "when parsing a let expression with zero cases" $ do
-      let code = "let in :foo"
+          it "has the correct name" $
+            name `shouldBe` MappyNamedValue "first"
 
-      it "fails to parse" $ do
-        parseExpression code `shouldSatisfy` isLeft
+          it "has the correct arguments" $
+            args `shouldBe` map MappyNamedValue ["a", "b"]
+
+          it "has the correct body" $
+            body `shouldBe` MappyNamedValue "a"
+
+        it "correctly parses the function binding" $ do
+          def `shouldBe` (DefSugar $ SugaredFnDefinition (MappyNamedValue "first") [MappyNamedValue "a", MappyNamedValue "b"] $ MappyNamedValue "a")
+
+      describe "with multiple definitions" $ do
+        let code = "let a = :foo b = :baz c = :bar in [to-foo a b c]"
+
+        it "parses the sugared expression" $ do
+          let
+            (Right (ExprSugar (SugaredLet defs (MappyApp (MappyNamedValue name) args)))) = parseExpression code
+          (length defs, name, length args) `shouldBe` (3, "to-foo", 3)
+
+      describe "with one definition" $ do
+        let code = "let a = :foo in a"
+
+        it "parses the sugared expression" $ do
+          parseExpression code `shouldBe` (Right $ ExprSugar $ SugaredLet [MappyDef (MappyNamedValue "a") (MappyKeyword "foo")] (MappyNamedValue "a"))
+
+      describe "when parsing a let expression with zero definitions" $ do
+        let code = "let in :foo"
+
+        it "fails to parse" $ do
+          parseExpression code `shouldSatisfy` isLeft
 
     describe "when parsing nested lambas" $ do
       it "parses correctly" $ do

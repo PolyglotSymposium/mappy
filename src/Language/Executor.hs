@@ -31,7 +31,6 @@ eval env namedValue@(MappyNamedValue name) = do
   eval env result
 eval env (MappyApp fn params) = apply env fn params
 eval env (MappyLambda args body) = Right $ MappyClosure args body env
-eval env (MappyClosure args body env') = Right $ MappyClosure args body (env ++ env')
 eval env (MappyMap map') = evalMap (eval env) map'
 eval _ value = Right value
 
@@ -70,20 +69,20 @@ apply' env (MappyNamedValue "give") (key:value:map':[]) = do
 apply' _ (MappyNamedValue "give") args =
   singleError $ WrongNumberOfArguments "give" 3 $ length args
 apply' env nonPrimitive args =
-  eval env nonPrimitive >>= applyNonPrim args env
+  eval env nonPrimitive >>= applyNonPrim nonPrimitive args env
 
-applyNonPrim :: [Expression] -> Env -> Expression -> FullyEvaluated Expression
-applyNonPrim args _ (MappyClosure argNames body closedEnv) = do
-  env' <- extendEnvironment (take n argNames) (take n args) closedEnv
+applyNonPrim :: Expression -> [Expression] -> Env -> Expression -> FullyEvaluated Expression
+applyNonPrim nonPrim args env closure@(MappyClosure argNames body closedEnv) = do
+  env' <- extendEnvironment (take n argNames) (take n args) closedEnv env
   case compare (length argNames) n of
     LT -> Left [WrongNumberOfArguments "#closure#" (length argNames) n]
     GT -> return $ MappyClosure (drop n argNames) body env'
     EQ -> eval env' body
   where n = length args
 
-applyNonPrim args env kwd@(MappyKeyword _) =
+applyNonPrim _ args env kwd@(MappyKeyword _) =
   eval env $ MappyApp (MappyNamedValue "take") (kwd:args)
-applyNonPrim _ _ value = Left [NotAFunction value]
+applyNonPrim _ _ _ value = Left [NotAFunction value]
 
 evalAll :: Env -> [Expression] -> FullyEvaluated [Expression]
 evalAll env exprs = case E.partitionEithers $ map (eval env) exprs of
@@ -94,8 +93,8 @@ assertMap :: String -> Expression -> Expression -> FullyEvaluated Expression
 assertMap _ _ m@(MappyMap _) = Right m
 assertMap fn key nonMap = Left [TakeCalledOnNonMap fn key nonMap]
 
-extendEnvironment :: [Expression] -> [Expression] -> Env -> FullyEvaluated Env
-extendEnvironment argNames args env =
+extendEnvironment :: [Expression] -> [Expression] -> Env -> Env -> FullyEvaluated Env
+extendEnvironment argNames args toExtend env =
   let
     -- Env
     unEvaluated = zip argNames args
@@ -103,7 +102,7 @@ extendEnvironment argNames args env =
     evaluated = map extend unEvaluated
     partitioned = E.partitionEithers evaluated
   in
-    liftM2 (++) (final partitioned) (pure env)
+    liftM2 (++) (final partitioned) (pure toExtend)
   where
   final ([], env') = Right env'
   final (errors, _) = Left $ concat errors

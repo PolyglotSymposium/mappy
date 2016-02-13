@@ -6,7 +6,7 @@ import Language.Primitives.Map
 import qualified Data.Map.Strict as M
 
 if_def =
-  (MappyDef
+  MappyDef
     (MappyNamedValue "if")
     (MappyLambda
       [MappyNamedValue "cond", MappyLazyArgument "then", MappyLazyArgument "else"]
@@ -16,4 +16,4 @@ if_def =
           (MappyNamedValue "take")
           [MappyKeyword "truthy", MappyNamedValue "cond"],
         MappyMap $ StandardMap $ M.fromList [(MappyKeyword "false",MappyApp (MappyNamedValue "else") [])],
-        MappyApp (MappyNamedValue "then") []])))
+        MappyApp (MappyNamedValue "then") []]))
