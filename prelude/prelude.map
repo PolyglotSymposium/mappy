@@ -2,6 +2,10 @@ if cond (then) (else) = [[
   default-take [take :truthy cond] (:false else) then
 ]]
 
+cond cases = [[
+  take true cases
+]]
+
 true = (:truthy :true)
 false = (:truthy :false)
 
