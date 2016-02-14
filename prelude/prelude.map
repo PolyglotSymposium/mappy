@@ -46,6 +46,22 @@ digit-char->nat c = [
   )
 ]
 
+-- private
+string->nat-aux str acc = [
+  if [empty? str]
+    acc
+    [string->nat-aux
+      [:tail str]
+      [add
+        [mult ten acc]
+        [digit-char->nat [:head str]
+      ]
+    ]
+  ]
+]
+
+string->nat str = [string->nat-aux str zero]
+
 pow base exponent = [
   if [equal? zero exponent]
     one
@@ -61,6 +77,7 @@ one = [succ zero]
 two = [succ one]
 three = [succ two]
 four = [succ three]
+ten = [mult two [succ four]]
 
 identity a = a
 
@@ -588,6 +605,30 @@ cases = (|
       :should-be :equal
       :actual [map digit-char->nat "0123456789"]
       :expected (| zero one two three four [succ four] [add three three] [add four three] [add four four] [add four [succ four]]|)
+    )
+  )
+  (
+    :testing :string->nat_for-empty
+    :where (
+      :should-be :equal
+      :actual [string->nat ""]
+      :expected zero
+    )
+  )
+  (
+    :testing :string->nat_for-single-digit
+    :where (
+      :should-be :equal
+      :actual [string->nat "7"]
+      :expected [add three four]
+    )
+  )
+  (
+    :testing :string->nat_for-multi-digit
+    :where (
+      :should-be :equal
+      :actual [string->nat "42"]
+      :expected [mult [add three three] [add three four]]
     )
   )
 |)
