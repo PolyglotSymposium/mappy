@@ -12,6 +12,7 @@ import Language.Primitives.Map
 instance PrettyPrintable Expression where
   pretty (MappyKeyword name) = ':':name
   pretty (MappyNamedValue name) = name
+  pretty (MappyLazyArgument name) = "(" ++ name ++ ")"
   pretty (MappyApp fn args) = "[" ++ unwords (pretty fn:map pretty args) ++ "]"
   pretty mm@(MappyMap (StandardMap map')) =
     case classifyMap map' of
@@ -25,7 +26,6 @@ instance PrettyPrintable Expression where
   pretty (MappyMap (IoMap _)) = "__prim_io_map"
   pretty (MappyLambda args body) = "\\" ++ unwords (map pretty args) ++ " -> " ++ pretty body
   pretty (MappyClosure args body _) = "#closure[...]#" ++ pretty (MappyLambda args body)
-  pretty (MappyLazyArgument _) = errorInMappy "A lazy argument was pretty printed."
   pretty (ExprSugar _) = errorInMappy "A sugared value was pretty printed."
 
 data MapClassification =
