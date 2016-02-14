@@ -72,6 +72,13 @@ nil = ()
 
 cons value list = (:head value :tail list)
 
+-- length : list a -> nat
+length values = [
+  if [empty? values]
+    zero
+    [succ [length [:tail values]]]
+]
+
 -- elem? : list a -> a -> bool
 elem? values a = [
   if [empty? values]
@@ -303,6 +310,30 @@ cases = (|
       :should-be :equal
       :actual [pow [succ two] two]
       :expected [succ [succ [succ [succ [succ four]]]]]
+    )
+  )
+  (
+    :testing :length-of-nil
+    :where (
+      :should-be :equal
+      :actual [length nil]
+      :expected zero
+    )
+  )
+  (
+    :testing :length-of-values
+    :where (
+      :should-be :equal
+      :actual [length (|:a :b :c :d|)]
+      :expected four
+    )
+  )
+  (
+    :testing :length-of-a-string
+    :where (
+      :should-be :equal
+      :actual [length "12345"]
+      :expected [succ four]
     )
   )
   (
