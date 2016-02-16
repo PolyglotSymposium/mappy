@@ -19,10 +19,12 @@ backendToString (MappyDef name value:rest) =
 lazyArgFn :: Expression -> [Expression] -> Expression -> String
 lazyArgFn name args body =
   let
-    newBody = replaceThroughout undefined (lazyArgs args) body
+    lazyArgRules = undefined
+    newBody = replaceThroughout lazyArgRules body
   in
     simpleFn name (toNames args) newBody
 
+replaceThroughout :: M.Map Expression (Expression -> Expression) -> Expression -> Expression
 replaceThroughout = undefined
 toNames = undefined
 lazyArgs = undefined
