@@ -188,6 +188,16 @@ split-aux vs acc = [
 -- split: a -> list a -> list (list a)
 split delim vs = [split-aux vs nil]
 
+-- map-stream : (a -> b) -> stream a -> stream b
+map-stream f stream =
+  \ -> let
+    current = [stream]
+  in
+    (
+      :value [f [:value current]]
+      :next [map-stream f [:next current]]
+    )
+
 -- repeat : a -> stream a
 repeat v = \ -> (
   :value v
@@ -537,6 +547,22 @@ cases = (|
       :should-be :equal
       :actual [:value [[:next [[repeat :foo]]]]]
       :expected :foo
+    )
+  )
+  (
+    :testing :map-stream-given-identity-returns-a-stream-that-behaves-the-same
+    :where (
+      :should-be :equal
+      :actual [first-n four [map-stream identity [cycle (| one two |)]]]
+      :expected (| one two one two |)
+    )
+  )
+  (
+    :testing :map-stream-applies-a-function-over-a-stream
+    :where (
+      :should-be :equal
+      :actual [first-n four [map-stream succ [cycle (| one two three four |)]]]
+      :expected (| two three four [succ four] |)
     )
   )
   (
