@@ -22,6 +22,8 @@ library
                      , Repl
                      , Language.Ast
                      , Language.Ast.PrettyPrinter
+                     , Language.Backend
+                     , Language.Backend.Clojure
                      , Language.Desugar
                      , Language.Error
                      , Language.Error.PrettyPrinter
