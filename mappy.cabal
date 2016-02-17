@@ -12,6 +12,7 @@ category:            Compilers/Interpreters
 build-type:          Simple
 data-dir:            prelude
 data-files:          prelude.map
+extra-source-files:  README.md
 cabal-version:       >=1.10
 
 library
