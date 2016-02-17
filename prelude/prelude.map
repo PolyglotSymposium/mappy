@@ -198,6 +198,22 @@ map-stream f stream =
       :next [map-stream f [:next current]]
     )
 
+-- filter-stream : (a -> bool) -> stream a -> stream a
+filter-stream p? stream =
+  let
+    current = [stream]
+    value = [:value current]
+    next = [:next current]
+  in
+    [
+      if [p? value]
+      \ -> (
+        :value value
+        :next [filter-stream p? next]
+      )
+      [filter-stream p? next]
+    ]
+
 -- repeat : a -> stream a
 repeat v = \ -> (
   :value v
@@ -563,6 +579,30 @@ cases = (|
       :should-be :equal
       :actual [first-n four [map-stream succ [cycle (| one two three four |)]]]
       :expected (| two three four [succ four] |)
+    )
+  )
+  (
+    :testing :filter-stream-for-a-trivial-case
+    :where (
+      :should-be :equal
+      :actual [first-n four [filter-stream [const true] [cycle (| one two |)]]]
+      :expected (| one two one two |)
+    )
+  )
+  (
+    :testing :filter-stream-for-a-less-trivial-case
+    :where (
+      :should-be :equal
+      :actual [first-n four [filter-stream [. not [equal? two]] [cycle (| zero one two |)]]]
+      :expected (| zero one zero one |)
+    )
+  )
+  (
+    :testing :filter-stream-for-consecutive-filterables
+    :where (
+      :should-be :equal
+      :actual [first-n four [filter-stream [. not [equal? two]] [cycle (| two two one two two |)]]]
+      :expected (| one one one one |)
     )
   )
   (
