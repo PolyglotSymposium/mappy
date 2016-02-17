@@ -214,6 +214,18 @@ filter-stream p? stream =
       [filter-stream p? next]
     ]
 
+-- head-while : (a -> bool) -> stream a -> list a
+head-while p? stream =
+  let
+    current = [stream]
+    value = [:value current]
+  in
+    [
+      if [p? value]
+        [cons value [head-while p? [:next current]]]
+        nil
+    ]
+
 -- repeat : a -> stream a
 repeat v = \ -> (
   :value v
@@ -603,6 +615,21 @@ cases = (|
       :should-be :equal
       :actual [first-n four [filter-stream [. not [equal? two]] [cycle (| two two one two two |)]]]
       :expected (| one one one one |)
+    )
+  )
+  (
+    :testing :head-while-given-a-non-matching-predicate
+    :where (
+      :should-be :empty
+      :value [head-while [equal? :foo] [repeat :bar]]
+    )
+  )
+  (
+    :testing :head-while-given-a-less-trivial-case
+    :where (
+      :should-be :equal
+      :actual [head-while [elem? (| :a :b |)] [cycle (| :a :a :b :a :b :c |)]]
+      :expected (| :a :a :b :a :b |)
     )
   )
   (
