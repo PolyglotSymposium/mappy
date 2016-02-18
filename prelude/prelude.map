@@ -227,6 +227,17 @@ alternating-streams stream1 stream2 =
     :next [alternating-streams stream2 [:next current]]
   )
 
+-- zip-streams : stream a -> stream b -> stream (:fst a :snd b)
+zip-streams stream1 stream2 =
+   \ ->
+  let
+    s1 = [stream1]
+    s2 = [stream2]
+  in (
+    :value (:fst [:value s1] :snd [:value s2])
+    :next [zip-streams [:next s1] [:next s2]]
+  )
+
 -- map-stream : (a -> b) -> stream a -> stream b
 map-stream f stream =
   \ -> let
@@ -845,6 +856,18 @@ cases = (|
       :should-be :equal
       :actual [first-n four [alternating-streams [cycle (| :a :b |)] [cycle (| :c :d |)]]]
       :expected (| :a :c :b :d |)
+    )
+  )
+  (
+    :testing :zip-streams-zips-into-tuples
+    :where (
+      :should-be :equal
+      :actual [first-n three [zip-streams [cycle (| :a :b |)] [cycle (| :c :d |)]]]
+      :expected (|
+        (:fst :a :snd :c)
+        (:fst :b :snd :d)
+        (:fst :a :snd :c)
+      |)
     )
   )
 |)
