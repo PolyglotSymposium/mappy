@@ -7,7 +7,7 @@ data Error a =
   | RepeatedDefinition String
   | NameNotDefined String
   | WrongNumberOfArguments String Int Int
-  | KeyNotFound a
+  | KeyNotFound a a
   | GiveCalledOnNonMap a a a
   | TakeCalledOnNonMap String a a
   | NotAFunction a

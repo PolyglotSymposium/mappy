@@ -2,6 +2,8 @@ module Language.Error.PrettyPrinterSpec (spec) where
 
 import Test.Hspec
 
+import qualified Data.Map.Strict as M
+
 import Language.Ast
 import Language.Ast.PrettyPrinter()
 import Language.Error
@@ -15,7 +17,7 @@ shouldFormatAs err string =
 spec :: Spec
 spec = do
   describe "pretty" $ do
-    describe "given a wrong number of arguments error error" $ do
+    describe "given a wrong number of arguments error" $ do
       let
         fnName = "fn"
         err = WrongNumberOfArguments fnName
@@ -37,3 +39,12 @@ spec = do
 
           it "formats correctly" $ do
             err'' `shouldFormatAs` "The function `fn` was applied to 1 value, but it accepts 0"
+
+    describe "given a key not found error" $ do
+      let
+        key = MappyKeyword "some-key"
+        map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "foo") (MappyKeyword "bar")
+        err = KeyNotFound key map
+
+      it "formats correctly" $ do
+        err `shouldFormatAs` "The key `:some-key` was not found in `(:foo :bar)`"

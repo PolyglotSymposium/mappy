@@ -287,7 +287,7 @@ spec = do
             ]
 
         it "errors with a KeyNotFound error" $ do
-          exec code `shouldBe` Left [KeyNotFound (MappyKeyword "not")]
+          exec code `shouldBe` Left [KeyNotFound (MappyKeyword "not") map]
 
       describe "given the correct arguments" $ do
         let

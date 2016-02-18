@@ -9,8 +9,8 @@ instance PrettyPrintable a => PrettyPrintable (Error a) where
   pretty (NameNotDefined name) = concat ["The name `", name, "` is not defined"]
   pretty (WrongNumberOfArguments name expected actual) =
     concat ["The function `", name, "` was applied to ", values actual, ", but it accepts ", atMost expected]
-  pretty (KeyNotFound expr) =
-    concat ["The key `", pretty expr, "` was not found"]
+  pretty (KeyNotFound expr map) =
+    concat ["The key `", pretty expr, "` was not found in `", pretty map, "`"]
   pretty (GiveCalledOnNonMap _ _ nonMap) =
     concat ["The `give` primitive was called with a non-map: `", pretty nonMap, "`"]
   pretty (TakeCalledOnNonMap fnName _ nonMap) =

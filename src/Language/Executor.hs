@@ -51,7 +51,7 @@ apply' :: Env -> Expression -> [Expression] -> FullyEvaluated Expression
 apply' env (MappyNamedValue "take") (key:map':[]) = do
   [key', maybeMap] <- evalAll env [key, map']
   (MappyMap map'') <- assertMap "take" key' maybeMap
-  maybe (singleError $ KeyNotFound key') Right $ PM.lookup key' map''
+  maybe (singleError $ KeyNotFound key' maybeMap) Right $ PM.lookup key' map''
 apply' _ (MappyNamedValue "take") args =
   singleError $ WrongNumberOfArguments "take" 2 $ length args
 apply' env (MappyNamedValue "default-take") (key:map':def:[]) = do
