@@ -217,6 +217,16 @@ split-aux vs acc = [
 -- split: a -> list a -> list (list a)
 split delim vs = [split-aux vs nil]
 
+-- alternating-streams : stream a -> stream a -> stream a
+alternating-streams stream1 stream2 =
+   \ ->
+  let
+    current = [stream1]
+  in (
+    :value [:value current]
+    :next [alternating-streams stream2 [:next current]]
+  )
+
 -- map-stream : (a -> b) -> stream a -> stream b
 map-stream f stream =
   \ -> let
@@ -819,6 +829,22 @@ cases = (|
       :should-be :equal
       :actual [[:with-default [maybe-take :a (:a :foo)]] :shouldnt-be-hit]
       :expected :foo
+    )
+  )
+  (
+    :testing :alternating-streams-puts-the-first-stream-first
+    :where (
+      :should-be :equal
+      :actual [:value [[alternating-streams [repeat :a] [repeat :b]]]]
+      :expected :a
+    )
+  )
+  (
+    :testing :alternating-streams-correctly-alternates
+    :where (
+      :should-be :equal
+      :actual [first-n four [alternating-streams [cycle (| :a :b |)] [cycle (| :c :d |)]]]
+      :expected (| :a :c :b :d |)
     )
   )
 |)
