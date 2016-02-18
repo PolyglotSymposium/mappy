@@ -23,6 +23,7 @@ instance PrettyPrintable Expression where
       StringAsMap -> "\"" ++ stringInternal mm ++ "\""
       (RatioAsMap num denom) -> pretty num ++ "/" ++ pretty denom
       (NatAsMap nat) -> show $ keyDepth nat $ MappyKeyword "pred"
+      (BoolAsMap value) -> value
   pretty (MappyMap (IoMap _)) = "__prim_io_map"
   pretty (MappyLambda args body) = "\\" ++ unwords (map pretty args) ++ " -> " ++ pretty body
   pretty (MappyClosure args body _) = "#closure[...]#" ++ pretty (MappyLambda args body)
@@ -34,6 +35,7 @@ data MapClassification =
   | StringAsMap
   | NatAsMap Expression
   | RatioAsMap Expression Expression
+  | BoolAsMap String
   | JustAMap
   deriving Eq
 
@@ -43,11 +45,13 @@ classifyMap map' =
   then
     NatAsMap $ MappyMap $ StandardMap map'
   else
-    case map (\k -> M.lookup (MappyKeyword k) map') ["__type", "head", "tail", "numerator", "denominator"] of
-      [Just (MappyKeyword "char"), _, _, _, _] -> CharAsMap
-      [_, Just _, Just _, _, _] ->
+    case map (\k -> M.lookup (MappyKeyword k) map') ["__type", "head", "tail", "numerator", "denominator", "truthy"] of
+      [Just (MappyKeyword "char"), _, _, _, _, _] -> CharAsMap
+      [_, Just _, Just _, _, _, _] ->
         if (MappyMap $ StandardMap map') `isListOf` CharAsMap then StringAsMap else ListAsMap
-      [_, _, _, Just num, Just denom] -> RatioAsMap num denom
+      [_, _, _, Just num, Just denom, _] -> RatioAsMap num denom
+      [_, _, _, _, _, Just (MappyKeyword v)] ->
+        if v `elem` ["true", "false"] then BoolAsMap v else JustAMap
       _ -> JustAMap
 
 isListOf :: Expression -> MapClassification -> Bool
