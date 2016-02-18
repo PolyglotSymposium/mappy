@@ -93,6 +93,14 @@ nil = ()
 
 cons value list = (:head value :tail list)
 
+deep-take keys structure = [
+  if [empty? keys]
+    structure
+    [deep-take
+      [:tail keys]
+      [take [:head keys] structure]]
+]
+
 -- length : list a -> nat
 length values = [
   if [empty? values]
@@ -726,6 +734,22 @@ cases = (|
       :should-be :equal
       :actual [string->nat "42"]
       :expected [mult [add three three] [add three four]]
+    )
+  )
+  (
+    :testing :deep-take-given-no-keys
+    :where (
+      :should-be :equal
+      :actual [deep-take nil (:a (:b :c))]
+      :expected (:a (:b :c))
+    )
+  )
+  (
+    :testing :deep-take-given-some-keys
+    :where (
+      :should-be :equal
+      :actual [deep-take (| :head :a () |) (| (:a (() :c)) two three |)]
+      :expected :c
     )
   )
 |)
