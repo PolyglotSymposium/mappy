@@ -101,6 +101,27 @@ deep-take keys structure = [
       [take [:head keys] structure]]
 ]
 
+nothing = (
+  :map \_ -> nothing
+  :with-default identity
+  :nothing? true
+)
+
+just v = (
+  :map \f -> [just [f v]]
+  :with-default [const v]
+  :nothing? false
+)
+
+maybe-take key map =
+  let
+    result = [default-take key map (:wrap map)]
+  in [
+    if [equal? (:wrap map) result]
+      nothing
+      [just result]
+  ]
+
 -- length : list a -> nat
 length values = [
   if [empty? values]
@@ -750,6 +771,54 @@ cases = (|
       :should-be :equal
       :actual [deep-take (| :head :a () |) (| (:a (() :c)) two three |)]
       :expected :c
+    )
+  )
+  (
+    :testing :just-with-default
+    :where (
+      :should-be :equal
+      :actual [[:with-default [just :foo]] :shouldnt-be-hit]
+      :expected :foo
+    )
+  )
+  (
+    :testing :just-mapped-over
+    :where (
+      :should-be :equal
+      :actual [[:with-default [[:map [just zero]] succ]] :shouldnt-be-hit]
+      :expected one
+    )
+  )
+  (
+    :testing :nothing-with-default
+    :where (
+      :should-be :equal
+      :actual [[:with-default nothing] :foo]
+      :expected :foo
+    )
+  )
+  (
+    :testing :nothing-mapped-over
+    :where (
+      :should-be :equal
+      :actual [:nothing? [[:map nothing] succ]]
+      :expected true
+    )
+  )
+  (
+    :testing :maybe-take-when-key-is-not-found
+    :where (
+      :should-be :equal
+      :actual [:nothing? [maybe-take :a ()]]
+      :expected true
+    )
+  )
+  (
+    :testing :maybe-take-when-key-is-found
+    :where (
+      :should-be :equal
+      :actual [[:with-default [maybe-take :a (:a :foo)]] :shouldnt-be-hit]
+      :expected :foo
     )
   )
 |)
