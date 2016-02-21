@@ -214,8 +214,14 @@ split-aux vs acc = [
     ]
 ]
 
--- split: a -> list a -> list (list a)
+-- split : a -> list a -> list (list a)
 split delim vs = [split-aux vs nil]
+
+-- cons-stream : a -> stream a -> stream a
+cons-stream value stream = \ -> (
+  :value value
+  :next stream
+)
 
 -- alternating-streams : stream a -> stream a -> stream a
 alternating-streams stream1 stream2 =
@@ -868,6 +874,22 @@ cases = (|
         (:fst :b :snd :d)
         (:fst :a :snd :c)
       |)
+    )
+  )
+  (
+    :testing :cons-stream-adds-a-new-first-value
+    :where (
+      :should-be :equal
+      :actual [:value [[cons-stream :a [repeat :b]]]]
+      :expected :a
+    )
+  )
+  (
+    :testing :cons-stream-preserves-the-later-stream
+    :where (
+      :should-be :equal
+      :actual [first-n four [cons-stream :a [repeat :b]]]
+      :expected (| :a :b :b :b |)
     )
   )
 |)
