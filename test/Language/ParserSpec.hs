@@ -108,33 +108,33 @@ spec = do
       let code = "a = :foo"
 
       it "parses correctly as Left" $ do
-        parseReplExpr code `shouldBe` (Right $ Just $ Left $ MappyDef (MappyNamedValue "a") (MappyKeyword "foo"))
+        parseReplExpr code `shouldBe` (Right $ ParsedDef $ MappyDef (MappyNamedValue "a") (MappyKeyword "foo"))
 
     describe "parsing a definition with random whitespace" $ do
       let code = "\t\t\t    a    =     :foo\t  \t"
 
       it "parses correctly as Left" $ do
-        parseReplExpr code `shouldBe` (Right $ Just $ Left $ MappyDef (MappyNamedValue "a") (MappyKeyword "foo"))
+        parseReplExpr code `shouldBe` (Right $ ParsedDef $ MappyDef (MappyNamedValue "a") (MappyKeyword "foo"))
 
     describe "parsing an expression" $ do
       let code = ":foo"
 
       it "parses correctly as Right" $ do
-        parseReplExpr code `shouldBe` (Right $ Just $ Right $ MappyKeyword "foo")
+        parseReplExpr code `shouldBe` (Right $ ParsedExpr $ MappyKeyword "foo")
 
     describe "parsing an expression with random whitespace" $ do
       let code = "\t\t\t    :foo\t  \t"
 
       it "parses correctly as Right" $ do
-        parseReplExpr code `shouldBe` (Right $ Just $ Right $ MappyKeyword "foo")
+        parseReplExpr code `shouldBe` (Right $ ParsedExpr $ MappyKeyword "foo")
 
     describe "parsing an empty string" $ do
       it "parses correctly as Nothing" $ do
-        parseReplExpr "" `shouldBe` (Right Nothing)
+        parseReplExpr "" `shouldBe` Right Whitespace
 
     describe "parsing whitespace" $ do
       it "parses correctly as Nothing" $ do
-        parseReplExpr "\t\t\t    \t  \t  \t" `shouldBe` (Right Nothing)
+        parseReplExpr "\t\t\t    \t  \t  \t" `shouldBe` Right Whitespace
 
     describe "parsing multiple expressions on the same line" $ do
       it "fails to parse" $ do

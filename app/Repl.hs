@@ -51,13 +51,13 @@ repl' (Right initialEnv, histFile) = runInputT settings (go initialEnv)
       Nothing -> go env
       Just line' -> case parse defOrExpr "(unknown)" line' of
         Left err -> (outputStrLn $ show err) >> go env
-        Right (Just (Left def)) ->
+        (Right (ParsedDef def)) ->
           let
             (MappyDef name value) = desugarEachDef def
           in
             go (E.NamePair (name, value):env)
 
-        Right (Just (Right expr)) -> case eval env $ desugarExpr expr of
+        (Right (ParsedExpr expr)) -> case eval env $ desugarExpr expr of
           v -> (outputStrLn $ print' v) *> go env
 
-        Right Nothing -> go env
+        Right _ -> go env

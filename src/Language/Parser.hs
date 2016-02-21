@@ -10,15 +10,21 @@ import Data.Maybe (catMaybes)
 parseFile :: String -> Either ParseError [Definition]
 parseFile = parse file "Error parsing file"
 
-defOrExpr :: Parser (Maybe (Either Definition Expression))
+data ParsedDefOrExpr =
+  Whitespace
+  | ParsedDef Definition
+  | ParsedExpr Expression
+  deriving (Show, Eq)
+
+defOrExpr :: Parser ParsedDefOrExpr
 defOrExpr =
   let
-    validRepl cons p = Just . cons <$> try (fullTerm p)
+    validRepl ctor p = ctor <$> try (fullTerm p)
     fullTerm p = whiteSpace *> p <* whiteSpace <* eof
   in
-    validRepl Left definition <|>
-    validRepl Right expression <|>
-    whiteSpace *> eof *> pure Nothing
+    validRepl ParsedDef definition <|>
+    validRepl ParsedExpr expression <|>
+    whiteSpace *> eof *> pure Whitespace
 
 file :: Parser [Definition]
 file =
