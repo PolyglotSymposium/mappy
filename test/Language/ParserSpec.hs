@@ -42,6 +42,8 @@ spec = do
 
     for_ [
       ("the empty file", "")
+      , ("a file filled with a bunch of commas", ",,,,,,,,,,,,,,")
+      , ("a file filled with a bunch of whitespace", "\n\n\t\t    \t\t   \n")
       , ("a file filled with a bunch of commas and whitespace", "\t,,,\t\t\n    ,,, ,, ,,,")
       ] $ \(fileDescription, fileText) ->
       describe fileDescription $ do
@@ -52,6 +54,7 @@ spec = do
       ("no newline", "")
       , ("a newline", "\n")
       , ("random whitespace, ending with a newline", " \t  \t\t\n")
+      , ("a comma", ",")
       ] $ \(endDesc, end) ->
       describe ("having " ++ endDesc ++ " at the end") $ do
         describe "containing just a comment" $ do
@@ -63,6 +66,7 @@ spec = do
 
           it "parses that definition" $ do
             parseFile code `shouldBe` Right [MappyDef (MappyNamedValue "a") (MappyKeyword "foo")]
+
         describe "containing only multiple comments" $ do
           let code = "-- this is a comment\n-- another comment" ++ end
 
@@ -125,14 +129,14 @@ spec = do
         parseReplExpr code `shouldBe` (Right $ Just $ Right $ MappyKeyword "foo")
 
     describe "parsing an empty string" $ do
-      it "parses correctly Nothing" $ do
+      it "parses correctly as Nothing" $ do
         parseReplExpr "" `shouldBe` (Right Nothing)
 
     describe "parsing whitespace" $ do
-      it "parses correctly Nothing" $ do
+      it "parses correctly as Nothing" $ do
         parseReplExpr "\t\t\t    \t  \t  \t" `shouldBe` (Right Nothing)
 
-    describe "parsing multiple expressions" $ do
+    describe "parsing multiple expressions on the same line" $ do
       it "fails to parse" $ do
         parseReplExpr ":foo :bar" `shouldSatisfy` isLeft
 
@@ -187,7 +191,7 @@ spec = do
     describe "when parsing a list with extraneous whitespace" $ do
       let code = "(|\t\t   \t\n   \n|)"
 
-      it "parses the sugared expression" $ do
+      it "successfully parses the sugared expression" $ do
         parseExpression code `shouldSatisfy` isRight
 
     describe "when parsing a list with a few values" $ do
@@ -250,7 +254,7 @@ spec = do
         it "fails to parse" $ do
           parseExpression code `shouldSatisfy` isLeft
 
-    describe "when parsing nested lambas" $ do
+    describe "when parsing nested lambdas" $ do
       it "parses correctly" $ do
         parseExpression "\\x -> \\y -> x" `shouldBe` Right (MappyLambda [MappyNamedValue "x"] (MappyLambda [MappyNamedValue "y"] $ MappyNamedValue "x"))
 
@@ -259,15 +263,15 @@ spec = do
           it "fails to parse" $ do
             parseExpression ("\\:foo -> :bar") `shouldSatisfy` isLeft
 
-      describe "whose lambda an first param are space separated" $ do
-        it "parses correctly" $ do
+      describe "when the backslash and first parameter are space separated" $ do
+        it "ignores the spacing" $ do
           parseExpression "\\ x -> :foo" `shouldBe` Right (MappyLambda [MappyNamedValue "x"] (MappyKeyword "foo"))
 
       describe "that has no arguments" $ do
         it "parses correctly" $ do
           parseExpression "\\ -> :foo" `shouldBe` Right (MappyLambda [] (MappyKeyword "foo"))
 
-      describe "who has a lazy argument" $ do
+      describe "that has a lazy argument" $ do
         it "parses correctly" $ do
           parseExpression "\\(  x\t) -> :foo" `shouldBe` Right (MappyLambda [MappyLazyArgument "x"] (MappyKeyword "foo"))
 
@@ -321,20 +325,20 @@ spec = do
             in
               parseExpression ("[" ++ name ++ " " ++ args ++ "]") `shouldBe` Right (MappyApp (MappyNamedValue name) $ map MappyNamedValue nArgs)
 
-      describe "a map as the function" $ do
+      describe "with an obvious (literal) map as the function" $ do
         it "fails to parse" $ do
           parseExpression "[()]" `shouldSatisfy` isLeft
 
-    describe "when parsing maps" $ do
-      describe "a map with whitespace after the first paren" $ do
+    describe "when parsing a map" $ do
+      describe "with whitespace after the first paren" $ do
         it "parses fine" $ do
           parseExpression "(\n  \t\t:a :b)" `shouldBe` (Right $ MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"))
 
-      describe "the empty map" $ do
+      describe "that is empty" $ do
         it "parses correctly" $ do
           parseExpression "()" `shouldBe` Right (MappyMap $ StandardMap M.empty)
 
-      describe "a map containing" $ do
+      describe "that contains" $ do
         describe "a single association of keywords" $ do
           it "parses correctly" $ do
             parseExpression "(:a :b)" `shouldBe` Right (MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"))

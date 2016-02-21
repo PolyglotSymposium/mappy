@@ -10,10 +10,21 @@ import Language.Executor
 
 import qualified Data.Map.Strict as M
 
-simple_def name val = MappyDef (MappyNamedValue name) (MappyKeyword val)
-def_main = MappyDef (MappyNamedValue "main")
-truthy_value = MappyMap $ StandardMap $ M.singleton (MappyKeyword "truthy") (MappyKeyword "true")
-falsey_value = MappyMap $ StandardMap $ M.singleton (MappyKeyword "truthy") (MappyKeyword "false")
+simple_def n val = MappyDef (name n) (kwd val)
+
+def_main = MappyDef (name "main")
+
+truthy_value =
+  MappyMap $ StandardMap $ M.singleton (kwd "truthy") (kwd "true")
+falsey_value =
+  MappyMap $ StandardMap $ M.singleton (kwd "truthy") (kwd "false")
+
+kwd = MappyKeyword
+name = MappyNamedValue
+appl = MappyApp
+
+empty_map = MappyMap $ StandardMap $ M.empty
+single_map a = MappyMap . StandardMap . M.singleton a
 
 spec :: Spec
 spec = do
@@ -21,121 +32,110 @@ spec = do
     describe "given a sugared function def" $ do
       let
         code = [
-          DefSugar (SugaredFnDefinition (MappyNamedValue "first") [
-            MappyNamedValue "a"
-            , MappyNamedValue "b"
-            ] $ MappyNamedValue "a")
-          , def_main $ MappyApp (MappyNamedValue "first") [MappyKeyword "a", MappyKeyword "b"]
+          DefSugar (SugaredFnDefinition (name "first") [
+            name "a"
+            , name "b"
+            ] $ name "a")
+          , def_main $ appl (name "first") [kwd "a", kwd "b"]
           ]
 
       it "runs the function as if it were simply defined as a lambda" $ do
-        exec code `shouldBe` Right (MappyKeyword "a")
+        exec code `shouldBe` Right (kwd "a")
 
     describe "a named value that refers to another named value" $ do
       let
         code = [
-          def_main $ (MappyNamedValue "a"),
+          def_main $ (name "a"),
           simple_def "b" "c",
-          MappyDef (MappyNamedValue "a") (MappyNamedValue "b")
+          MappyDef (name "a") (name "b")
           ]
 
       it "reduces until the final value" $ do
-        exec code `shouldBe` Right (MappyKeyword "c")
+        exec code `shouldBe` Right (kwd "c")
 
     describe "the application of a lambda" $ do
       let
-        lambda = MappyLambda (map MappyNamedValue ["a", "b"]) $ MappyNamedValue "a"
+        lambda = MappyLambda (map name ["a", "b"]) $ name "a"
         code = [
-          def_main $ MappyApp lambda [MappyKeyword "a", MappyKeyword "b"]
+          def_main $ appl lambda [kwd "a", kwd "b"]
           ]
 
-      it "executes correctly" $ do
-        exec code `shouldBe` (Right $ MappyKeyword "a")
+      it "binds the arguments and evaluates the body" $ do
+        exec code `shouldBe` (Right $ kwd "a")
 
     describe "the application of a non-function or keyword" $ do
       let
         code appliedTo = [
-          MappyDef (MappyNamedValue "a") $ MappyMap $ StandardMap M.empty,
-          def_main $ MappyApp (MappyNamedValue "a") [MappyKeyword "b"]
+          MappyDef (name "a") empty_map,
+          def_main $ appl (name "a") [kwd "b"]
           ]
 
-      it "errors saying that the keyword is not a function" $ do
-        exec (code map) `shouldBe` (Left [NotAFunction $ MappyMap $ StandardMap $ M.empty])
+      it "errors saying that the value is not a function" $ do
+        exec (code map) `shouldBe` (Left [NotAFunction empty_map])
 
     describe "the application of a keyword" $ do
       let
-        map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+        map = single_map (kwd "a") (kwd "b")
         code appliedTo = [
-          def_main $ MappyApp (MappyKeyword "a") [appliedTo]
+          def_main $ appl (kwd "a") [appliedTo]
           ]
 
       it "applies as `take` applies" $ do
-        exec (code map) `shouldBe` Right (MappyKeyword "b")
+        exec (code map) `shouldBe` Right (kwd "b")
 
       describe "to a non-map" $ do
-        it "errors" $ do
-          exec (code $ MappyKeyword "b") `shouldBe` (Left [TakeCalledOnNonMap "take" (MappyKeyword "a") (MappyKeyword "b")])
+        it "errors with a take called on non-map error" $ do
+          exec (code $ kwd "b") `shouldBe` (Left [TakeCalledOnNonMap "take" (kwd "a") (kwd "b")])
 
     describe "the application of a lambda" $ do
-      let lambda = MappyDef (MappyNamedValue "const") (MappyLambda [MappyNamedValue "a", MappyNamedValue "b"] (MappyNamedValue "a"))
+      let lambda = MappyDef (name "const") (MappyLambda [name "a", name "b"] (name "a"))
 
       describe "with too few arguments" $ do
         let
           code = [
             lambda
-            , def_main $ MappyApp (MappyNamedValue "const") [MappyKeyword "foo"]
+            , def_main $ appl (name "const") [kwd "foo"]
             ]
 
           (Right (MappyClosure argNames body (newEnvEntry:_))) = exec code
 
         it "reduces the number of arguments down by the number applied" $ do
-          argNames `shouldBe` [MappyNamedValue "b"]
+          argNames `shouldBe` [name "b"]
 
         it "keeps the same function body" $ do
-          body `shouldBe` MappyNamedValue "a"
+          body `shouldBe` name "a"
 
         it "extends the closure's environment with the applied argument name and value" $ do
-          newEnvEntry `shouldBe` E.NamePair (MappyNamedValue "a", MappyKeyword "foo")
+          newEnvEntry `shouldBe` E.NamePair (name "a", kwd "foo")
 
       describe "with too many arguments" $ do
         let
           code fn = [
             lambda
-            , def_main $ MappyApp fn [MappyKeyword "a", MappyKeyword "b", MappyKeyword "c"]
+            , def_main $ appl fn [kwd "a", kwd "b", kwd "c"]
             ]
 
         describe "and a named function" $ do
           it "errors with a WrongNumberOfArguments, carrying the name forward" $ do
-            exec (code $ MappyNamedValue "const") `shouldBe` Left [WrongNumberOfArguments "const" 2 3]
+            exec (code $ name "const") `shouldBe` Left [WrongNumberOfArguments "const" 2 3]
 
         describe "and an anonymous function" $ do
           it "errors with a WrongNumberOfArguments giving a generic name to the function" $ do
-            exec (code $ MappyLambda [] $ MappyKeyword "a") `shouldBe` Left [WrongNumberOfArguments "#closure#" 0 3]
+            exec (code $ MappyLambda [] $ kwd "a") `shouldBe` Left [WrongNumberOfArguments "#closure#" 0 3]
 
       describe "with the correct number of argument" $ do
         let
           code = [
             lambda
-            , def_main $ MappyApp (MappyNamedValue "const") [MappyKeyword "a", MappyKeyword "b"]
+            , def_main $ appl (name "const") [kwd "a", kwd "b"]
             ]
 
         it "applies it as a function" $ do
-          exec code `shouldBe` Right (MappyKeyword "a")
-
-    describe "a lambda" $ do
-      describe "given a new key and value" $ do
-        let
-          map = MappyMap $ StandardMap M.empty
-          code = [
-            def_main $ MappyApp (MappyNamedValue "give") [MappyKeyword "a", MappyKeyword "b", map]
-            ]
-
-        it "returns a map with the new key" $ do
-          exec code `shouldBe` Right (MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"))
+          exec code `shouldBe` Right (kwd "a")
 
     describe "give" $ do
-      describe "given undefined arguments" $ do
-        let code = [def_main $ MappyApp (MappyNamedValue "give") [MappyNamedValue "a", MappyNamedValue "b", MappyNamedValue "c"]]
+      describe "given arguments whose names are not bound" $ do
+        let code = [def_main $ appl (name "give") [name "a", name "b", name "c"]]
 
         it "returns an error for each argument" $ do
           exec code `shouldBe` Left (map NameNotDefined ["a", "b", "c"])
@@ -143,7 +143,7 @@ spec = do
       describe "given the wrong number of arguments" $ do
         let
           code = [
-            def_main $ MappyApp (MappyNamedValue "give") [MappyKeyword "a"]
+            def_main $ appl (name "give") [kwd "a"]
             ]
 
         it "errors with a WrongNumberOfArguments error" $ do
@@ -151,52 +151,52 @@ spec = do
 
       describe "given a new key and value" $ do
         let
-          map = MappyMap $ StandardMap M.empty
           code = [
-            def_main $ MappyApp (MappyNamedValue "give") [MappyKeyword "a", MappyKeyword "b", map]
+            def_main $ appl (name "give") [kwd "a", kwd "b", empty_map]
             ]
 
         it "returns a map with the new key" $ do
-          exec code `shouldBe` Right (MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"))
+          exec code `shouldBe` Right (single_map (kwd "a") (kwd "b"))
 
       describe "given an existing key" $ do
         let
-          map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          map = single_map (kwd "a") (kwd "b")
           code = [
-            def_main $ MappyApp (MappyNamedValue "give") [MappyKeyword "a", MappyKeyword "c", map]
+            def_main $ appl (name "give") [kwd "a", kwd "c", map]
             ]
 
         it "overwrites the old value at the key" $ do
-          exec code `shouldBe` Right (MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "c"))
+          exec code `shouldBe` Right (single_map (kwd "a") (kwd "c"))
 
       describe "given a new key and a non-map" $ do
         let
           code = [
-            def_main $ MappyApp (MappyNamedValue "give") [MappyKeyword "a", MappyKeyword "b", MappyKeyword "c"]
+            def_main $ appl (name "give") [kwd "a", kwd "b", kwd "c"]
             ]
 
         it "fails with a GiveCalledOnNonMap error" $ do
-          exec code `shouldBe` Left [GiveCalledOnNonMap (MappyKeyword "a") (MappyKeyword "b") (MappyKeyword "c")]
+          exec code `shouldBe` Left [GiveCalledOnNonMap (kwd "a") (kwd "b") (kwd "c")]
 
     describe "default-take" $ do
-      describe "given undefined arguments" $ do
-        let code = [def_main $ MappyApp (MappyNamedValue "default-take") [MappyNamedValue "a", MappyNamedValue "b", MappyNamedValue "c"]]
+      describe "given arguments whose names are not bound" $ do
+        let code = [def_main $ appl (name "default-take") [name "a", name "b", name "c"]]
 
         it "returns an error for each argument" $ do
           exec code `shouldBe` Left (map NameNotDefined ["a", "b", "c"])
 
       describe "given a non-map as the second argument" $ do
-        let code = [def_main $ MappyApp (MappyNamedValue "default-take") [MappyKeyword "a", MappyKeyword "b", MappyKeyword "c"]]
+        let code = [def_main $ appl (name "default-take") [kwd "a", kwd "b", kwd "c"]]
 
-        it "errors" $ do
-          exec code `shouldBe` (Left [TakeCalledOnNonMap "default-take" (MappyKeyword "a") (MappyKeyword "b")])
+        it "errors with a take called on a non-map error" $ do
+          exec code `shouldBe` (Left [TakeCalledOnNonMap "default-take" (kwd "a") (kwd "b")])
+
       describe "given a map with an erroring default value" $ do
         let
           code lookup = [
-            def_main $ MappyApp (MappyNamedValue "default-take") [
-              MappyKeyword lookup,
-              MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b"),
-              MappyNamedValue "name-not-known"]
+            def_main $ appl (name "default-take") [
+              kwd lookup,
+              single_map (kwd "a") (kwd "b"),
+              name "name-not-known"]
             ]
 
         describe "when looking up a key that is not in the map" $ do
@@ -205,27 +205,27 @@ spec = do
           it "errors because the default key cannot be found" $ do
             exec code' `shouldBe` Left [NameNotDefined "name-not-known"]
 
-      describe "given a map with an erroring value" $ do
+      describe "given a map with an erring value" $ do
         let
           code lookup = [
-            def_main $ MappyApp (MappyNamedValue "default-take") [
-              MappyKeyword lookup,
+            def_main $ appl (name "default-take") [
+              kwd lookup,
               MappyMap $ StandardMap $ M.fromList [
-                (MappyKeyword "a", MappyNamedValue "name-not-known"),
-                (MappyKeyword "b", MappyKeyword "b-value")],
-              MappyKeyword "default"]
+                (kwd "a", name "name-not-known"),
+                (kwd "b", kwd "b-value")],
+              kwd "default"]
             ]
 
-        describe "when looking up the key of the erroring value" $ do
+        describe "when looking up the key of the erring value" $ do
           let code' = code "a"
 
-          it "errors" $ do
+          it "errors as well" $ do
             exec code' `shouldBe` Left [NameNotDefined "name-not-known"]
 
       describe "given the wrong number of arguments" $ do
         let
           code = [
-            def_main $ MappyApp (MappyNamedValue "default-take") [MappyKeyword "a"]
+            def_main $ appl (name "default-take") [kwd "a"]
             ]
 
         it "errors with a WrongNumberOfArguments error" $ do
@@ -233,83 +233,83 @@ spec = do
 
       describe "given a key that\'s not in the map and a default" $ do
         let
-          map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          map = single_map (kwd "a") (kwd "b")
           code = [
-            def_main $ MappyApp (MappyNamedValue "default-take") [MappyKeyword "not", map, MappyKeyword "default"]
+            def_main $ appl (name "default-take") [kwd "not", map, kwd "default"]
             ]
 
         it "returns the default" $ do
-          exec code `shouldBe` Right (MappyKeyword "default")
+          exec code `shouldBe` Right (kwd "default")
 
-      describe "given a key that\'s in the map" $ do
+      describe "given a key that's in the map" $ do
         let
-          map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          map = single_map (kwd "a") (kwd "b")
           code = [
-            def_main $ MappyApp (MappyNamedValue "default-take") [MappyKeyword "a", map, MappyKeyword "default"]
+            def_main $ appl (name "default-take") [kwd "a", map, kwd "default"]
             ]
 
         it "finds the key in the map" $ do
-          exec code `shouldBe` Right (MappyKeyword "b")
+          exec code `shouldBe` Right (kwd "b")
 
     describe "take" $ do
-      describe "given undefined arguments" $ do
-        let code = [def_main $ MappyApp (MappyNamedValue "take") [MappyNamedValue "a", MappyNamedValue "b"]]
+      describe "given arguments whose names are not bound" $ do
+        let code = [def_main $ appl (name "take") [name "a", name "b"]]
 
         it "returns an error for each argument" $ do
           exec code `shouldBe` Left (map NameNotDefined ["a", "b"])
 
       describe "given the wrong number of arguments" $ do
         let
-          map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          map = single_map (kwd "a") (kwd "b")
           code = [
-            def_main $ MappyApp (MappyNamedValue "take") [MappyKeyword "a"]
+            def_main $ appl (name "take") [kwd "a"]
             ]
 
         it "errors with a WrongNumberOfArguments error" $ do
           exec code `shouldBe` Left [WrongNumberOfArguments "take" 2 1]
 
-      describe "given a key that\'s not in the map" $ do
+      describe "given a key that's not in the map" $ do
         let
-          map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          map = single_map (kwd "a") (kwd "b")
           code = [
-            def_main $ MappyApp (MappyNamedValue "take") [MappyKeyword "not", map]
+            def_main $ appl (name "take") [kwd "not", map]
             ]
 
         it "errors with a KeyNotFound error" $ do
-          exec code `shouldBe` Left [KeyNotFound (MappyKeyword "not") map]
+          exec code `shouldBe` Left [KeyNotFound (kwd "not") map]
 
       describe "given the correct arguments" $ do
         let
-          map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          map = single_map (kwd "a") (kwd "b")
           code = [
-            def_main $ MappyApp (MappyNamedValue "take") [MappyKeyword "a", map]
+            def_main $ appl (name "take") [kwd "a", map]
             ]
 
         it "finds the key in the map" $ do
-          exec code `shouldBe` Right (MappyKeyword "b")
+          exec code `shouldBe` Right (kwd "b")
 
     describe "given main simply binds to something else in the environment" $ do
       let
         code = [
           simple_def "foo" "bar",
-          def_main (MappyNamedValue "foo")
+          def_main (name "foo")
           ]
 
       it "evaluates to whatever that name evaluates to when looked up" $ do
-        exec code `shouldBe` Right (MappyKeyword "bar")
+        exec code `shouldBe` Right (kwd "bar")
 
     describe "given main is simply a map" $ do
       let main = [def_main map]
-          map = MappyMap $ StandardMap $ M.singleton (MappyKeyword "a") (MappyKeyword "b")
+          map = single_map (kwd "a") (kwd "b")
 
       it "evaluates to just that map" $ do
         exec main `shouldBe` Right map
 
     describe "given main is simply a keyword" $ do
-      let main = [def_main (MappyKeyword "foobar")]
+      let main = [def_main (kwd "foobar")]
 
       it "evaluates to just that keyword" $ do
-        exec main `shouldBe` Right (MappyKeyword "foobar")
+        exec main `shouldBe` Right (kwd "foobar")
 
     describe "given a lot of repeats, including main" $ do
       let
@@ -331,7 +331,7 @@ spec = do
         exec defs `shouldBe` Left [RepeatedDefinition "foo"]
 
     describe "given some definitions without a main" $ do
-      let defs = [MappyDef (MappyNamedValue "foo") (MappyKeyword "bar")]
+      let defs = [MappyDef (name "foo") (kwd "bar")]
 
       it "errors with a main not found error" $ do
         exec defs `shouldBe` Left [MainNotFound]

@@ -45,11 +45,11 @@ spec = do
     describe "given a character" $ do
       let char = ExprSugar $ SugaredChar '*'
 
-      it "desugars as \"binary\", with the same value" $ do
+      it "desugars as (reversed) \"binary\", with the same value" $ do
         (withoutTypeHint $ desugarExpr char) `shouldBe`
-          (cons mappyZero (cons mappyOne (cons mappyZero (cons mappyOne (cons mappyZero (cons mappyOne emptyMap))))))
+          (cons mappyZero $ cons mappyOne $ cons mappyZero $ cons mappyOne $ cons mappyZero $ cons mappyOne emptyMap)
 
-      it "has the :__type :char key at the top level" $ do
+      it "has the :__type :char type-hint at the top level" $ do
         typeHint (desugarExpr char) `shouldBe` (Just $ MappyKeyword "char")
 
     describe "given an empty sugared list" $ do
@@ -61,11 +61,11 @@ spec = do
     describe "given a sugared list with some values" $ do
       let code = ExprSugar $ SugaredList [MappyKeyword "foo", MappyNamedValue "bar"]
 
-      it "desugars to a head tail structure, ending in the empty map" $ do
+      it "desugars to a head-tail structure, ending in the empty map" $ do
         desugarExpr code `shouldBe` (cons (MappyKeyword "foo") $ cons (MappyNamedValue "bar") emptyMap)
 
-    describe "given a sugared list a nested sugared list" $ do
+    describe "given a sugared list containing another sugared list" $ do
       let code = ExprSugar $ SugaredList [ExprSugar $ SugaredList []]
 
-      it "desugars all lists" $ do
+      it "recursively desugars" $ do
         desugarExpr code `shouldBe` (cons emptyMap emptyMap)
