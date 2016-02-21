@@ -4,6 +4,7 @@ import Test.Hspec
 
 import Language.Ast
 import Language.AstExamples
+import qualified Language.Env as E
 import Language.Error
 import Language.Executor
 
@@ -94,7 +95,7 @@ spec = do
           body `shouldBe` MappyNamedValue "a"
 
         it "extends the closure's environment with the applied argument name and value" $ do
-          newEnvEntry `shouldBe` (MappyNamedValue "a", MappyKeyword "foo")
+          newEnvEntry `shouldBe` E.NamePair (MappyNamedValue "a", MappyKeyword "foo")
 
       describe "with too many arguments" $ do
         let
@@ -122,18 +123,6 @@ spec = do
           exec code `shouldBe` Right (MappyKeyword "a")
 
     describe "a lambda" $ do
-      describe "given the wrong number of arguments" $ do
-        let
-          code = [
-            simple_def "a" "b",
-            def_main $ MappyLambda [(MappyNamedValue "a"), (MappyNamedValue "b")] (MappyKeyword "x")
-            ]
-
-        it "evaluates to a closure containing the same information and the environment" $ do
-          let
-            Right (MappyClosure _ (MappyKeyword _) (fst:_)) = exec code
-          fst `shouldBe` (MappyNamedValue "a", MappyKeyword "b")
-
       describe "given a new key and value" $ do
         let
           map = MappyMap $ StandardMap M.empty

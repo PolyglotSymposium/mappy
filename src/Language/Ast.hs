@@ -15,6 +15,7 @@ import Data.Bits
 import Data.Char (ord)
 import qualified Data.Map.Strict as M
 
+import Language.Env
 import Language.Primitives.IoAble
 import Language.Primitives.Map
 
@@ -38,7 +39,7 @@ data Expression =
   MappyMap (PrimitiveMap Expression)
   | MappyApp Expression [Expression]
   | MappyLambda [Expression] Expression
-  | MappyClosure [Expression] Expression [(Expression, Expression)]
+  | MappyClosure [Expression] Expression (Env Expression)
   | MappyKeyword String
   | MappyNamedValue String
   | MappyLazyArgument String
@@ -88,7 +89,7 @@ toBinary = mappyList id . go
   single 1 = mappyOne
   go 0 = []
   go 1 = [mappyOne]
-  go n = (single $ 1 .&. n):go (shiftR n 1)
+  go n = single (1 .&. n):go (shiftR n 1)
 
 mappyZero :: Expression
 mappyZero = MappyMap $ StandardMap M.empty

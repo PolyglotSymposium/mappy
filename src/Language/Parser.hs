@@ -84,7 +84,7 @@ letExpression = (do
   return $ ExprSugar $ SugaredLet (firstDef:restDefs) expr) <?> "let expression"
 
 lazyArgument :: Parser Expression
-lazyArgument = (fmap MappyLazyArgument $ char '(' *> whiteSpace *> identifier <* whiteSpace  <* char ')')
+lazyArgument = fmap MappyLazyArgument (char '(' *> whiteSpace *> identifier <* whiteSpace  <* char ')')
   <?> "lazy argument"
 
 lambda :: Parser Expression
@@ -118,7 +118,7 @@ map' = MappyMap <$> StandardMap <$>
   between (char '(') (char ')') pairs <?> "map"
 
 application :: Parser Expression
-application = (between (char '[') (char ']') $ do
+application = between (char '[') (char ']') (do
     whiteSpace
     fn <- namedValue <|> application <|> keyword <|> lambda
     whiteSpace

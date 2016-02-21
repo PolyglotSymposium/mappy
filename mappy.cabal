@@ -24,6 +24,7 @@ library
                      , Language.Ast
                      , Language.Ast.PrettyPrinter
                      , Language.Desugar
+                     , Language.Env
                      , Language.Error
                      , Language.Error.PrettyPrinter
                      , Language.Executor

@@ -10,6 +10,7 @@ import Data.List (intercalate)
 import Mappy
 import Language.Ast
 import Language.Desugar
+import qualified Language.Env as E
 import Language.Error
 import Language.Error.PrettyPrinter()
 import Language.Executor
@@ -54,7 +55,7 @@ repl' (Right initialEnv, histFile) = runInputT settings (go initialEnv)
           let
             (MappyDef name value) = desugarEachDef def
           in
-            go ((name, value):env)
+            go (E.NamePair (name, value):env)
 
         Right (Just (Right expr)) -> case eval env $ desugarExpr expr of
           v -> (outputStrLn $ print' v) *> go env

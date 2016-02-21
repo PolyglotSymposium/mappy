@@ -9,11 +9,12 @@ import Language.Ast
 import Language.Ast.PrettyPrinter()
 import Language.Desugar
 import Language.Error
+import qualified Language.Env as E
 import Language.Primitives
 import Language.Primitives.Map as PM
-
 type FullyEvaluated a = Either [Error Expression] a
-type Env = [(Expression, Expression)]
+
+type Env = E.Env Expression
 
 validatePreExec :: [Definition] -> Either [Error Expression] (Env, Expression)
 validatePreExec defs = do
@@ -27,7 +28,7 @@ exec defs = do
 
 eval :: Env -> Expression -> FullyEvaluated Expression
 eval env namedValue@(MappyNamedValue name) = do
-  result <- maybe (singleError $ NameNotDefined name) Right (Prelude.lookup namedValue env)
+  result <- maybe (singleError $ NameNotDefined name) Right (E.lookup namedValue env)
   eval env result
 eval env (MappyApp fn params) = apply env fn params
 eval env (MappyLambda args body) = Right $ MappyClosure args body env
@@ -111,8 +112,9 @@ extendEnvironment argNames args toExtend env =
   final (errors, _) = Left $ concat errors
   extend (MappyNamedValue name, value) = do
     v' <- eval env value
-    return (MappyNamedValue name, v')
-  extend (MappyLazyArgument name, value) = Right (MappyNamedValue name, MappyLambda [] value)
+    return $ E.NamePair (MappyNamedValue name, v')
+  extend (MappyLazyArgument name, value) =
+    Right $ E.NamePair (MappyNamedValue name, MappyLambda [] value)
   extend _ = errorInMappy "TODO: Better error for when a fn has a non-namey name."
 
 checkAgainstRepeatedDefs :: [Definition] -> Either [Error Expression] [Definition]
@@ -128,7 +130,7 @@ checkAgainstRepeatedDefs defs = go (S.empty, []) defs
 initialEnvironment :: [Definition] -> Either [Error Expression] (Env, Expression)
 initialEnvironment = go ([], Nothing)
   where
-  go (env, Just m) [] = Right (env ++ primitives, m)
+  go (env, Just m) [] = Right ([E.MultiNameLookup $ M.fromList $ env ++ primitives], m)
   go (_, Nothing) [] = singleError MainNotFound
   go (env, _) (MappyDef (MappyNamedValue "main") mainBody:rest) = go (env, Just mainBody) rest
   go (env, maybeMain) (MappyDef name body:rest) = go ((name, body):env, maybeMain) rest
