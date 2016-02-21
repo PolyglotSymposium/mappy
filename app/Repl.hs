@@ -35,6 +35,7 @@ repl = do
   setSGR [SetColor Foreground Vivid Green]
   putStrLn mappyAsciiArt
   setSGR [Reset]
+  putStrLn "\nUse Ctrl-C to quit"
   home <- getHomeDirectory
   repl' (fst <$> validatePreExec prelude, concat [home, "/", ".mappy_history"])
 
