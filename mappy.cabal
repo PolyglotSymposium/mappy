@@ -7,7 +7,7 @@ license:             BSD3
 license-file:        LICENSE
 author:              Michael Gilliland
 maintainer:          mjg.py3@gmail.com
-copyright:           2015 Michael Gilliland
+copyright:           2015-2016 Michael Gilliland
 category:            Compilers/Interpreters
 build-type:          Simple
 data-dir:            prelude
