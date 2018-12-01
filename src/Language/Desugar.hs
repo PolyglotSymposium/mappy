@@ -24,6 +24,14 @@ desugarExpr (ExprSugar (SugaredLet defs body)) =
 desugarExpr (ExprSugar (SugaredList values)) = mappyList desugarExpr values
 desugarExpr (ExprSugar (SugaredString str)) =
   desugarExpr $ ExprSugar $ SugaredList $ map (desugarExpr . ExprSugar . SugaredChar) str
+desugarExpr (ExprSugar (SugaredInt 0)) =
+  mappyEmptyMap `withTypeHint` "zero"
+desugarExpr (ExprSugar (SugaredInt n)) =
+  let
+    hint = if n < 0 then "negative-int" else "positive-int"
+    value = mappyNat $ abs n
+  in
+    (MappyMap $ StandardMap $ M.singleton (MappyKeyword "value") value) `withTypeHint` hint
 desugarExpr (ExprSugar (SugaredChar c)) = mappyChar c
 desugarExpr (MappyMap (StandardMap map')) = MappyMap $ StandardMap $ M.fromList $ map go $ M.toList map'
   where

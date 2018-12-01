@@ -4,11 +4,13 @@ module Language.Ast (
   , PrimitiveMap(..)
   , SugaredDefinition(..)
   , SugaredExpression(..)
+  , mappyEmptyMap
   , mappyChar
   , mappyNat
   , mappyList
   , mappyZero
   , mappyOne
+  , withTypeHint
   ) where
 
 import Data.Bits
@@ -28,6 +30,7 @@ data SugaredExpression =
   | SugaredList [Expression]
   | SugaredChar Char
   | SugaredString String
+  | SugaredInt Integer
   deriving (Eq, Show, Ord)
 
 data Definition =
@@ -75,12 +78,15 @@ withTypeHint (MappyMap (StandardMap map')) typeHint =
   MappyMap $ StandardMap $ M.union (M.singleton (MappyKeyword "__type") $ MappyKeyword typeHint) map'
 withTypeHint v _ = v
 
+mappyEmptyMap :: Expression
+mappyEmptyMap = MappyMap $ StandardMap M.empty
+
 mappyChar :: Char -> Expression
 mappyChar c = toBinary (ord c) `withTypeHint` "char"
 
-mappyNat :: Int -> Expression
-mappyNat 0 = MappyMap $ StandardMap M.empty
-mappyNat n = MappyMap $ StandardMap $ M.singleton (MappyKeyword "pred") $ mappyNat  $ n - 1
+mappyNat :: Integer -> Expression
+mappyNat 0 = mappyEmptyMap
+mappyNat n = MappyMap $ StandardMap $ M.singleton (MappyKeyword "pred") $ mappyNat $ n - 1
 
 toBinary :: Int -> Expression
 toBinary = mappyList id . go
