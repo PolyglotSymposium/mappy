@@ -323,6 +323,15 @@ iterate f v = \ -> (
   :next [iterate f [f v]]
 )
 
+empty-set = ()
+
+-- set-from-list : list a -> set a
+set-from-list = [fold \v s -> [give v true s] empty-set]
+
+set-contains? v set = [default-take v set false]
+
+set-insert v set = [give v true set]
+
 apply fn v = [fn v]
 
 assert c = [if c :pass :fail]
@@ -890,6 +899,30 @@ cases = (|
       :should-be :equal
       :actual [first-n four [cons-stream :a [repeat :b]]]
       :expected (| :a :b :b :b |)
+    )
+  )
+  (
+    :testing :empty-set-does-not-contain-a-value
+    :where (
+      :should-be :equal
+      :actual [set-contains? :foo empty-set]
+      :expected false
+    )
+  )
+  (
+    :testing :building-up-a-set-is-the-same-as-converting-a-list-to-a-set
+    :where (
+      :should-be :equal
+      :actual [set-insert :a [set-insert :b [set-insert :c [set-insert :d empty-set]]]]
+      :expected [set-from-list (|:a :b :c :d|)]
+    )
+  )
+  (
+    :testing :an-inserted-key-is-contained
+    :where (
+      :should-be :equal
+      :actual [set-contains? :a [set-insert :a empty-set]]
+      :expected true
     )
   )
 |)
