@@ -16,6 +16,9 @@ instance PrettyPrintable Expression where
   pretty (MappyApp fn args) = "[" ++ unwords (pretty fn:map pretty args) ++ "]"
   pretty mm@(MappyMap (StandardMap map')) =
     case classifyMap map' of
+      Zero -> "0"
+      PositiveInt expr -> pretty expr
+      NegativeInt expr -> "-" ++ pretty expr
       CharAsMap -> "'" ++ charInternal mm ++ "'"
       ListAsMap -> "(|" ++ unwords (sugarList $ MappyMap $ StandardMap map') ++ "|)"
       JustAMap ->
@@ -34,6 +37,9 @@ data MapClassification =
   | ListAsMap
   | StringAsMap
   | NatAsMap Expression
+  | Zero
+  | PositiveInt Expression
+  | NegativeInt Expression
   | RatioAsMap Expression Expression
   | BoolAsMap String
   | JustAMap
@@ -45,12 +51,15 @@ classifyMap map' =
   then
     NatAsMap $ MappyMap $ StandardMap map'
   else
-    case map (\k -> M.lookup (MappyKeyword k) map') ["__type", "head", "tail", "numerator", "denominator", "truthy"] of
-      [Just (MappyKeyword "char"), _, _, _, _, _] -> CharAsMap
-      [_, Just _, Just _, _, _, _] ->
+    case map (\k -> M.lookup (MappyKeyword k) map') ["__type", "head", "tail", "numerator", "denominator", "truthy", "value"] of
+      [Just (MappyKeyword "char"), _, _, _, _, _, _] -> CharAsMap
+      [Just (MappyKeyword "zero"), _, _, _, _, _, _] -> Zero
+      [Just (MappyKeyword "negative-int"), _, _, _, _, _, Just value] -> NegativeInt value
+      [Just (MappyKeyword "positive-int"), _, _, _, _, _, Just value] -> PositiveInt value
+      [_, Just _, Just _, _, _, _, _] ->
         if (MappyMap $ StandardMap map') `isListOf` CharAsMap then StringAsMap else ListAsMap
-      [_, _, _, Just num, Just denom, _] -> RatioAsMap num denom
-      [_, _, _, _, _, Just (MappyKeyword v)] ->
+      [_, _, _, Just num, Just denom, _, _] -> RatioAsMap num denom
+      [_, _, _, _, _, Just (MappyKeyword v), _] ->
         if v `elem` ["true", "false"] then BoolAsMap v else JustAMap
       _ -> JustAMap
 
