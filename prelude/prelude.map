@@ -9,6 +9,8 @@ cond cases = [[
 true = (:truthy :true)
 false = (:truthy :false)
 
+or a (b) = [if a a [b]]
+
 equal? a b = [default-take a (b true) false]
 
 not v = [if v [give :truthy :false v] [give :truthy :true v]]
@@ -26,6 +28,24 @@ add a b = [
     b
     [succ [add [pred a] b]]
 ]
+
++ a b =
+  [[
+    take
+    ([:__type a] [:__type b])
+    (
+      (:positive-int :positive-int) \ -> (:__type :positive-int :value [add [:value a] [:value b]])
+      (:negative-int :positive-int) \ ->
+      (:negative-int :negative-int) \ -> (:__type :negative-int :value [add [:value a] [:value b]])
+      (:positive-int :negative-int) \ ->
+      (:zero :positive-int)         \ -> b
+      (:zero :negative-int)         \ -> b
+      (:positive-int :zero)         \ -> a
+      (:negative-int :zero)         \ -> a
+      (:zero :zero)                 \ -> 0
+    )
+  ]]
+
 
 mult a b = [
   if [elem? (|a b|) zero]
@@ -364,6 +384,38 @@ expected-filter-list = [cons :c [cons :d nil]]
 always-true _ = true
 
 cases = (|
+  (
+    :testing :or-f-f
+    :where (
+      :should-be :equal
+      :actual [or false false]
+      :expected false
+    )
+  )
+  (
+    :testing :or-t-f
+    :where (
+      :should-be :equal
+      :actual [or true false]
+      :expected true
+    )
+  )
+  (
+    :testing :or-f-t
+    :where (
+      :should-be :equal
+      :actual [or false true]
+      :expected true
+    )
+  )
+  (
+    :testing :or-t-t
+    :where (
+      :should-be :equal
+      :actual [or true true]
+      :expected true
+    )
+  )
   (
     :testing :cons-works
     :where (
