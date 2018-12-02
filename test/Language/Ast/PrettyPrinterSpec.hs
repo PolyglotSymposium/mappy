@@ -5,7 +5,6 @@ import Test.Hspec
 import qualified Data.Map.Strict as M
 
 import Language.Ast
-import Language.Ast.PrettyPrinter()
 import Language.PrettyPrintable
 
 spec :: Spec
