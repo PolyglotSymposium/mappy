@@ -10,6 +10,5 @@ main :: IO ()
 main = do
   args <- getArgs
   case args of
-    (fileName:_) ->
-      readMappyFile fileName >>= (putStrLn . print') . exec
     [] -> repl
+    fileNames -> readMappyFiles fileNames >>= (putStrLn . print') . exec

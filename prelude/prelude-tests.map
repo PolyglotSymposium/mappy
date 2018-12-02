@@ -1,0 +1,670 @@
+silly-list = [cons :a [cons :b nil]]
+silly-with-empties-list = [cons () [cons () [cons :a [cons () [cons :b [cons () nil]]]]]]
+
+silly-fn v = [take v (:a :c :b :d)]
+
+expected-map-list = [cons :c [cons :d nil]]
+expected-filter-list = [cons :c [cons :d nil]]
+
+always-true _ = true
+
+cases = (|
+  (
+    :testing :addition-works-for-zero-cases
+    :where (
+      :should-be :equal
+      :actual (| [+ 0 0] [+ 42 0] [+ 0 42] [+ 0 -42] [+ -42 0] |)
+      :expected (| 0 42 42 -42 -42 |)
+    )
+  )
+  (
+    :testing :addition-works-for-same-sign-cases
+    :where (
+      :should-be :equal
+      :actual (| [+ 41 1] [+ -9 -8] |)
+      :expected (| 42 -17 |)
+    )
+  )
+  (
+    :testing :addition-works-for-neutralizing-cases
+    :where (
+      :should-be :equal
+      :actual [+ -42 42]
+      :expected 0
+    )
+  )
+  (
+    :testing :addition-works-for-different-sign-cases
+    :where (
+      :should-be :equal
+      :actual (| [+ -1 4] [+ -7 2] [+ 7 -8] [+ 42 -1] |)
+      :expected (| 3 -5 -1 41 |)
+    )
+  )
+  (
+    :testing :inc-works-for-some-cases
+    :where (
+      :should-be :equal
+      :actual (|[inc -5] [inc -1] [inc 0] [inc 1] [inc 20] [inc [inc 0]]|)
+      :expected (|-4 0 1 2 21 2|)
+    )
+  )
+  (
+    :testing :dec-works-for-some-cases
+    :where (
+      :should-be :equal
+      :actual (|[dec -5] [dec -1] [dec 0] [dec 1] [dec 20] [dec [dec 0]]|)
+      :expected (|-6 -2 -1 0 19 -2|)
+    )
+  )
+  (
+    :testing :or-f-f
+    :where (
+      :should-be :equal
+      :actual [or false false]
+      :expected false
+    )
+  )
+  (
+    :testing :or-t-f
+    :where (
+      :should-be :equal
+      :actual [or true false]
+      :expected true
+    )
+  )
+  (
+    :testing :or-f-t
+    :where (
+      :should-be :equal
+      :actual [or false true]
+      :expected true
+    )
+  )
+  (
+    :testing :or-t-t
+    :where (
+      :should-be :equal
+      :actual [or true true]
+      :expected true
+    )
+  )
+  (
+    :testing :cons-works
+    :where (
+      :should-be :equal
+      :actual [cons :foo nil]
+      :expected (:head :foo :tail ())
+    )
+  )
+  (
+    :testing :add-works-for-trivial-case
+    :where (
+      :should-be :equal
+      :actual [add zero two]
+      :expected two
+    )
+  )
+  (
+    :testing :add-works-for-harder-case
+    :where (
+      :should-be :equal
+      :actual [add two two]
+      :expected four
+    )
+  )
+  (
+    :testing :mult-for-zeroes
+    :where (
+      :should-be :equal
+      :actual (| [mult zero four] [mult four zero] |)
+      :expected (|zero zero|)
+    )
+  )
+  (
+    :testing :mult-for-ones
+    :where (
+      :should-be :equal
+      :actual (| [mult one four] [mult four one] |)
+      :expected (|four four|)
+    )
+  )
+  (
+    :testing :mult-for-a-less-trivial-case
+    :where (
+      :should-be :equal
+      :actual [mult two four]
+      :expected [succ [succ [succ [succ four]]]]
+    )
+  )
+  (
+    :testing :pow-of-zero
+    :where (
+      :should-be :equal
+      :actual [pow four zero]
+      :expected one
+    )
+  )
+  (
+    :testing :pow-of-one
+    :where (
+      :should-be :equal
+      :actual [pow four one]
+      :expected four
+    )
+  )
+  (
+    :testing :pow-for-less-trivial-case
+    :where (
+      :should-be :equal
+      :actual [pow [succ two] two]
+      :expected [succ [succ [succ [succ [succ four]]]]]
+    )
+  )
+  (
+    :testing :length-of-nil
+    :where (
+      :should-be :equal
+      :actual [length nil]
+      :expected zero
+    )
+  )
+  (
+    :testing :length-of-values
+    :where (
+      :should-be :equal
+      :actual [length (|:a :b :c :d|)]
+      :expected four
+    )
+  )
+  (
+    :testing :length-of-a-string
+    :where (
+      :should-be :equal
+      :actual [length "12345"]
+      :expected [succ four]
+    )
+  )
+  (
+    :testing :map-for-trivial-case
+    :where (
+      :should-be :equal
+      :actual [map identity silly-list]
+      :expected silly-list
+    )
+  )
+  (
+    :testing :map-for-harder-case
+    :where (
+      :should-be :equal
+      :actual [map silly-fn silly-list]
+      :expected expected-map-list
+    )
+  )
+  (
+    :testing :filter-for-trivial-case
+    :where (
+      :should-be :equal
+      :actual [filter always-true silly-list]
+      :expected silly-list
+    )
+  )
+  (
+    :testing :filter-for-harder-case
+    :where (
+      :should-be :equal
+      :actual [filter [. not empty?] silly-with-empties-list]
+      :expected silly-list
+    )
+  )
+  (
+    :testing :compose-for-trivial-case
+    :where (
+      :should-be :equal
+      :actual [[. identity identity] true]
+      :expected true
+    )
+  )
+  (
+    :testing :compose-for-harder-case
+    :where (
+      :should-be :equal
+      :actual [[. not not] true]
+      :expected true
+    )
+  )
+  (:testing :++-for-trivial-case :where (:should-be :empty :value [++ nil nil]))
+  (
+    :testing :++-for-harder-case
+    :where (
+      :should-be :equal
+      :actual [++ (|:a :b :c|) (|:d :e|)]
+      :expected (|:a :b :c :d :e|)
+    )
+  )
+  (
+    :testing :concat-for-trivial-case
+    :where (
+      :should-be :empty
+      :value [concat (| nil nil nil nil |)]
+    )
+  )
+  (
+    :testing :concat-for-harder-case
+    :where (
+      :should-be :equal
+      :actual [concat (| (|:a :b :c|) (|:d :e|) (|:f|) |)]
+      :expected (|:a :b :c :d :e :f|)
+    )
+  )
+  (:testing :iterate-n-for-0 :where (:should-be :empty :value [iterate-n identity zero zero]))
+  (
+    :testing :iterate-n-for-1
+    :where (
+      :should-be :equal
+      :actual [iterate-n identity zero (:pred zero)]
+      :expected (|zero|)
+    )
+  )
+  (
+    :testing :iterate-n-for-n
+    :where (
+      :should-be :equal
+      :actual [iterate-n succ zero four]
+      :expected (|zero (:pred zero) two (:pred two)|)
+    )
+  )
+  (
+    :testing :replicate-for-n
+    :where (
+      :should-be :equal
+      :actual [replicate four four]
+      :expected (|four four four four|)
+    )
+  )
+  (:testing :intersperse-for-empty :where (:should-be :empty :value [intersperse four nil]))
+  (
+    :testing :intersperse-for-singleton
+    :where (
+      :should-be :equal
+      :actual [intersperse four (|four|)]
+      :expected (|four|)
+    )
+  )
+  (
+    :testing :intersperse-for-bigger-list
+    :where (
+      :should-be :equal
+      :actual [intersperse zero (|four four four|)]
+      :expected (|four zero four zero four|)
+    )
+  )
+  (
+    :testing :intercalate-for-empties
+    :where (:should-be :empty :value [intercalate nil nil])
+  )
+  (
+    :testing :intercalate-for-non-trivial-case
+    :where (
+      :should-be :equal
+      :actual [intercalate ", " (|"hello" "world" "hi"|)]
+      :expected "hello, world, hi"
+    )
+  )
+  (
+    :testing :fold-for-empty-list
+    :where (:should-be :equal :actual [fold add four nil] :expected four)
+  )
+  (
+    :testing :fold-for-non-trivial-case
+    :where (
+      :should-be :equal
+      :actual [fold add zero (|two two four four|)]
+      :expected [add four [add four four]]
+    )
+  )
+  (
+    :testing :reverse-on-empty
+    :where (:should-be :empty :value [reverse nil])
+  )
+  (
+    :testing :reverse-on-a-non-empty-list
+    :where (:should-be :equal :actual [reverse (|zero two four|)] :expected (|four two zero|))
+  )
+  (
+    :testing :split-on-empty
+    :where (:should-be :empty :value [split ',' nil])
+  )
+  (
+    :testing :split-for-no-matches
+    :where (:should-be :equal :actual [split ',' "Hello"] :expected (|"Hello"|))
+  )
+  (
+    :testing :split-for-simple-matches
+    :where (:should-be :equal :actual [split ',' "a,b,c"] :expected (|"a" "b" "c"|))
+  )
+  (
+    :testing :split-for-match-on-the-end
+    :where (:should-be :equal :actual [split ',' "a,b,"] :expected (|"a" "b"|))
+  )
+  (
+    :testing :split-for-consecutive-matches
+    :where (:should-be :equal :actual [split ',' "a,,b"] :expected (|"a" "" "b"|))
+  )
+  (
+    :testing :repeat-returns-a-stream-whose-first-value-is-the-repeated-value
+    :where (
+      :should-be :equal
+      :actual [:value [[repeat :foo]]]
+      :expected :foo
+    )
+  )
+  (
+    :testing :repeat-returns-a-stream-whose-next-value-looks-a-lot-like-the-first
+    :where (
+      :should-be :equal
+      :actual [:value [[:next [[repeat :foo]]]]]
+      :expected :foo
+    )
+  )
+  (
+    :testing :map-stream-given-identity-returns-a-stream-that-behaves-the-same
+    :where (
+      :should-be :equal
+      :actual [first-n four [map-stream identity [cycle (| one two |)]]]
+      :expected (| one two one two |)
+    )
+  )
+  (
+    :testing :map-stream-applies-a-function-over-a-stream
+    :where (
+      :should-be :equal
+      :actual [first-n four [map-stream succ [cycle (| one two three four |)]]]
+      :expected (| two three four [succ four] |)
+    )
+  )
+  (
+    :testing :filter-stream-for-a-trivial-case
+    :where (
+      :should-be :equal
+      :actual [first-n four [filter-stream [const true] [cycle (| one two |)]]]
+      :expected (| one two one two |)
+    )
+  )
+  (
+    :testing :filter-stream-for-a-less-trivial-case
+    :where (
+      :should-be :equal
+      :actual [first-n four [filter-stream [. not [equal? two]] [cycle (| zero one two |)]]]
+      :expected (| zero one zero one |)
+    )
+  )
+  (
+    :testing :filter-stream-for-consecutive-filterables
+    :where (
+      :should-be :equal
+      :actual [first-n four [filter-stream [. not [equal? two]] [cycle (| two two one two two |)]]]
+      :expected (| one one one one |)
+    )
+  )
+  (
+    :testing :head-while-given-a-non-matching-predicate
+    :where (
+      :should-be :empty
+      :value [head-while [equal? :foo] [repeat :bar]]
+    )
+  )
+  (
+    :testing :head-while-given-a-less-trivial-case
+    :where (
+      :should-be :equal
+      :actual [head-while [elem? (| :a :b |)] [cycle (| :a :a :b :a :b :c |)]]
+      :expected (| :a :a :b :a :b |)
+    )
+  )
+  (
+    :testing :first-n-given-zero
+    :where (
+      :should-be :equal
+      :actual [first-n zero [repeat :foo]]
+      :expected nil
+    )
+  )
+  (
+    :testing :first-n-given-n
+    :where (
+      :should-be :equal
+      :actual [first-n four [repeat :foo]]
+      :expected (| :foo :foo :foo :foo |)
+    )
+  )
+  (
+    :testing :iterate-given-a-trivial-function
+    :where (
+      :should-be :equal
+      :actual [first-n four [iterate identity :foo]]
+      :expected (| :foo :foo :foo :foo |)
+    )
+  )
+  (
+    :testing :iterate-given-a-less-trivial-function
+    :where (
+      :should-be :equal
+      :actual [first-n four [iterate succ zero]]
+      :expected (| zero one two three |)
+    )
+  )
+  (
+    :testing :drop-n-given-0
+    :where (
+      :should-be :equal
+      :actual [first-n four [drop-n zero [iterate succ zero]]]
+      :expected (| zero one two three |)
+    )
+  )
+  (
+    :testing :drop-n-given-n
+    :where (
+      :should-be :equal
+      :actual [first-n four [drop-n four [iterate succ zero]]]
+      :expected (| four [succ four] [succ [succ four]] [succ [succ [succ four]]] |)
+    )
+  )
+  (
+    :testing :cycle-given-a-single-element
+    :where (
+      :should-be :equal
+      :actual [first-n four [cycle (| :foo |)]]
+      :expected (| :foo :foo :foo :foo |)
+    )
+  )
+  (
+    :testing :cycle-given-multiple-elements
+    :where (
+      :should-be :equal
+      :actual [first-n four [cycle (| :a :b |)]]
+      :expected (| :a :b :a :b |)
+    )
+  )
+  (
+    :testing :digit-char->nat-for-each-digit-char
+    :where (
+      :should-be :equal
+      :actual [map digit-char->nat "0123456789"]
+      :expected (| zero one two three four [succ four] [add three three] [add four three] [add four four] [add four [succ four]]|)
+    )
+  )
+  (
+    :testing :string->nat_for-empty
+    :where (
+      :should-be :equal
+      :actual [string->nat ""]
+      :expected zero
+    )
+  )
+  (
+    :testing :string->nat_for-single-digit
+    :where (
+      :should-be :equal
+      :actual [string->nat "7"]
+      :expected [add three four]
+    )
+  )
+  (
+    :testing :string->nat_for-multi-digit
+    :where (
+      :should-be :equal
+      :actual [string->nat "42"]
+      :expected [mult [add three three] [add three four]]
+    )
+  )
+  (
+    :testing :deep-take-given-no-keys
+    :where (
+      :should-be :equal
+      :actual [deep-take nil (:a (:b :c))]
+      :expected (:a (:b :c))
+    )
+  )
+  (
+    :testing :deep-take-given-some-keys
+    :where (
+      :should-be :equal
+      :actual [deep-take (| :head :a () |) (| (:a (() :c)) two three |)]
+      :expected :c
+    )
+  )
+  (
+    :testing :just-with-default
+    :where (
+      :should-be :equal
+      :actual [[:with-default [just :foo]] :shouldnt-be-hit]
+      :expected :foo
+    )
+  )
+  (
+    :testing :just-mapped-over
+    :where (
+      :should-be :equal
+      :actual [[:with-default [[:map [just zero]] succ]] :shouldnt-be-hit]
+      :expected one
+    )
+  )
+  (
+    :testing :nothing-with-default
+    :where (
+      :should-be :equal
+      :actual [[:with-default nothing] :foo]
+      :expected :foo
+    )
+  )
+  (
+    :testing :nothing-mapped-over
+    :where (
+      :should-be :equal
+      :actual [:nothing? [[:map nothing] succ]]
+      :expected true
+    )
+  )
+  (
+    :testing :maybe-take-when-key-is-not-found
+    :where (
+      :should-be :equal
+      :actual [:nothing? [maybe-take :a ()]]
+      :expected true
+    )
+  )
+  (
+    :testing :maybe-take-when-key-is-found
+    :where (
+      :should-be :equal
+      :actual [[:with-default [maybe-take :a (:a :foo)]] :shouldnt-be-hit]
+      :expected :foo
+    )
+  )
+  (
+    :testing :alternating-streams-puts-the-first-stream-first
+    :where (
+      :should-be :equal
+      :actual [:value [[alternating-streams [repeat :a] [repeat :b]]]]
+      :expected :a
+    )
+  )
+  (
+    :testing :alternating-streams-correctly-alternates
+    :where (
+      :should-be :equal
+      :actual [first-n four [alternating-streams [cycle (| :a :b |)] [cycle (| :c :d |)]]]
+      :expected (| :a :c :b :d |)
+    )
+  )
+  (
+    :testing :zip-streams-zips-into-tuples
+    :where (
+      :should-be :equal
+      :actual [first-n three [zip-streams [cycle (| :a :b |)] [cycle (| :c :d |)]]]
+      :expected (|
+        (:fst :a :snd :c)
+        (:fst :b :snd :d)
+        (:fst :a :snd :c)
+      |)
+    )
+  )
+  (
+    :testing :cons-stream-adds-a-new-first-value
+    :where (
+      :should-be :equal
+      :actual [:value [[cons-stream :a [repeat :b]]]]
+      :expected :a
+    )
+  )
+  (
+    :testing :cons-stream-preserves-the-later-stream
+    :where (
+      :should-be :equal
+      :actual [first-n four [cons-stream :a [repeat :b]]]
+      :expected (| :a :b :b :b |)
+    )
+  )
+  (
+    :testing :empty-set-does-not-contain-a-value
+    :where (
+      :should-be :equal
+      :actual [set-contains? :foo empty-set]
+      :expected false
+    )
+  )
+  (
+    :testing :building-up-a-set-is-the-same-as-converting-a-list-to-a-set
+    :where (
+      :should-be :equal
+      :actual [set-insert :a [set-insert :b [set-insert :c [set-insert :d empty-set]]]]
+      :expected [set-from-list (|:a :b :c :d|)]
+    )
+  )
+  (
+    :testing :an-inserted-key-is-contained
+    :where (
+      :should-be :equal
+      :actual [set-contains? :a [set-insert :a empty-set]]
+      :expected true
+    )
+  )
+|)
+
+apply-case case =
+  let
+    assertion = [:where case]
+  in (
+    :passed [[take [:should-be [:where case]] (
+      :equal \ -> [equal? [:actual [:where case]] [:expected [:where case]]]
+      :empty \ -> [empty? [:value [:where case]]]
+    )]]
+    :show-on-fail (:name [:testing case] :reason [:where case])
+  )
+
+run-tests cases = [
+  map :show-on-fail [filter [. not :passed] [map apply-case cases]]
+]
+
+main = [run-tests cases]
