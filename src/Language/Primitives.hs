@@ -4,6 +4,7 @@ import Language.Ast
 import Language.Primitives.Io
 
 primitives :: [(Expression, Expression)]
-primitives = [
-  (MappyNamedValue "__prim_io_map", MappyMap $ IoMap Io)
+primitives =
+  [
+    (MappyNamedValue "__prim_io_map", MappyMap $ IoMap Io)
   ]

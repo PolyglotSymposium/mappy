@@ -1,7 +1,6 @@
 module Mappy where
 
 import Language.Ast
-import Language.Ast.PrettyPrinter()
 import Language.Error.PrettyPrinter()
 import Language.Executor
 import Language.Parser

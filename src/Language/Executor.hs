@@ -6,7 +6,6 @@ import qualified Data.Set as S
 import Control.Monad (liftM2)
 
 import Language.Ast
-import Language.Ast.PrettyPrinter()
 import Language.Desugar
 import Language.Error
 import qualified Language.Env as E
@@ -73,7 +72,7 @@ apply' env nonPrimitive args =
   eval env nonPrimitive >>= applyNonPrim nonPrimitive args env
 
 applyNonPrim :: Expression -> [Expression] -> Env -> Expression -> FullyEvaluated Expression
-applyNonPrim nonPrim args env closure@(MappyClosure argNames body closedEnv) = do
+applyNonPrim nonPrim args env (MappyClosure argNames body closedEnv) = do
   env' <- extendEnvironment (take n argNames) (take n args) closedEnv env
   case compare (length argNames) n of
     LT -> Left [WrongNumberOfArguments (getName nonPrim) (length argNames) n]

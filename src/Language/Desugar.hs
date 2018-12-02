@@ -3,7 +3,6 @@ module Language.Desugar where
 import Language.Ast
 import Language.Error (errorInMappy)
 
-import Data.Char (ord)
 import qualified Data.Map.Strict as M
 
 desugarEachDef  :: Definition -> Definition

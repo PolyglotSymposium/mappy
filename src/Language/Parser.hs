@@ -78,7 +78,7 @@ integer = ExprSugar . SugaredInt <$> int <?> "integer"
     nat = zeroNumber <|> decimal
     zeroNumber =
       char '0' >> (hexOrOct <|> decimal <|> return 0) <?> ""
-    decimal = number 10 digit
+    decimal = number (10 :: Integer) digit
     number base baseDigit = do
       n <- liftM (numberValue base) (many1 baseDigit)
       seq n (return n)
@@ -86,8 +86,8 @@ integer = ExprSugar . SugaredInt <$> int <?> "integer"
       foldl (\ x -> ((fromIntegral base * x) +) . fromIntegral . digitToInt) 0
     hexOrOct = hexadecimal <|> octal
     hexadecimal = oneOf "xX" >> hexnum
-    hexnum = number 16 hexDigit
-    octal = oneOf "oO" >> number 8 octDigit
+    hexnum = number (16 :: Integer) hexDigit
+    octal = oneOf "oO" >> number (8 :: Integer) octDigit
 
 characterInternal :: Parser Char
 characterInternal = escapedChar <|> anyChar
