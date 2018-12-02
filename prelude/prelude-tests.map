@@ -10,6 +10,30 @@ always-true _ = true
 
 cases = (|
   (
+    :testing :zip-works-for-differing-lengths
+    :where (
+      :should-be :equal
+      :actual (| [zip (|:a|) (||)] [zip (|1|) (||)] |)
+      :expected (| nil nil |)
+    )
+  )
+  (
+    :testing :zip-works-for-non-empty
+    :where (
+      :should-be :equal
+      :actual [zip (|:a :b :c|) (|1 2 3|)]
+      :expected (| (:fst :a :snd 1) (:fst :b :snd 2) (:fst :c :snd 3) |)
+    )
+  )
+  (
+    :testing :zip-works-for-empty
+    :where (
+      :should-be :equal
+      :actual [zip nil nil]
+      :expected nil
+    )
+  )
+  (
     :testing :mod-for-not-contains
     :where (
       :should-be :equal

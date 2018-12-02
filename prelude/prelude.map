@@ -306,6 +306,16 @@ alternating-streams stream1 stream2 =
     :next [alternating-streams stream2 [:next current]]
   )
 
+zip xs ys = [
+  if [or [empty? xs] [empty? ys]]
+    nil
+    let
+      x = [:head xs]
+      y = [:head ys]
+    in
+      (:head (:fst x :snd y) :tail [zip [:tail xs] [:tail ys]])
+]
+
 -- zip-streams : stream a -> stream b -> stream (:fst a :snd b)
 zip-streams stream1 stream2 =
    \ ->
