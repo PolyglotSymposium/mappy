@@ -9,6 +9,8 @@ cond cases = [[
 true = (:truthy :true)
 false = (:truthy :false)
 
+or a (b) = [if a a [b]]
+
 equal? a b = [default-take a (b true) false]
 
 not v = [if v [give :truthy :false v] [give :truthy :true v]]
@@ -26,6 +28,50 @@ add a b = [
     b
     [succ [add [pred a] b]]
 ]
+
+inc v = [
+  if [equal? -1 v]
+    0
+    [[
+      [:__type v]
+      (
+        :zero         \ -> 1
+        :positive-int \ -> (:__type :positive-int :value [succ [:value v]])
+        :negative-int \ -> (:__type :negative-int :value [pred [:value v]])
+      )
+    ]]
+]
+
+dec v = [
+  if [equal? 1 v]
+    0
+    [[
+      [:__type v]
+      (
+        :zero         \ -> -1
+        :positive-int \ -> (:__type :positive-int :value [pred [:value v]])
+        :negative-int \ -> (:__type :negative-int :value [succ [:value v]])
+      )
+    ]]
+]
+
++ a b =
+  [[
+    take
+    ([:__type a] [:__type b])
+    (
+      (:positive-int :positive-int) \ -> (:__type :positive-int :value [add [:value a] [:value b]])
+      (:negative-int :positive-int) \ -> [+ [inc a] [dec b]]
+      (:negative-int :negative-int) \ -> (:__type :negative-int :value [add [:value a] [:value b]])
+      (:positive-int :negative-int) \ -> [+ [dec a] [inc b]]
+      (:zero :positive-int)         \ -> b
+      (:zero :negative-int)         \ -> b
+      (:positive-int :zero)         \ -> a
+      (:negative-int :zero)         \ -> a
+      (:zero :zero)                 \ -> 0
+    )
+  ]]
+
 
 mult a b = [
   if [elem? (|a b|) zero]
@@ -364,6 +410,86 @@ expected-filter-list = [cons :c [cons :d nil]]
 always-true _ = true
 
 cases = (|
+  (
+    :testing :addition-works-for-zero-cases
+    :where (
+      :should-be :equal
+      :actual (| [+ 0 0] [+ 42 0] [+ 0 42] [+ 0 -42] [+ -42 0] |)
+      :expected (| 0 42 42 -42 -42 |)
+    )
+  )
+  (
+    :testing :addition-works-for-same-sign-cases
+    :where (
+      :should-be :equal
+      :actual (| [+ 41 1] [+ -9 -8] |)
+      :expected (| 42 -17 |)
+    )
+  )
+  (
+    :testing :addition-works-for-neutralizing-cases
+    :where (
+      :should-be :equal
+      :actual [+ -42 42]
+      :expected 0
+    )
+  )
+  (
+    :testing :addition-works-for-different-sign-cases
+    :where (
+      :should-be :equal
+      :actual (| [+ -1 4] [+ -7 2] [+ 7 -8] [+ 42 -1] |)
+      :expected (| 3 -5 -1 41 |)
+    )
+  )
+  (
+    :testing :inc-works-for-some-cases
+    :where (
+      :should-be :equal
+      :actual (|[inc -5] [inc -1] [inc 0] [inc 1] [inc 20] [inc [inc 0]]|)
+      :expected (|-4 0 1 2 21 2|)
+    )
+  )
+  (
+    :testing :dec-works-for-some-cases
+    :where (
+      :should-be :equal
+      :actual (|[dec -5] [dec -1] [dec 0] [dec 1] [dec 20] [dec [dec 0]]|)
+      :expected (|-6 -2 -1 0 19 -2|)
+    )
+  )
+  (
+    :testing :or-f-f
+    :where (
+      :should-be :equal
+      :actual [or false false]
+      :expected false
+    )
+  )
+  (
+    :testing :or-t-f
+    :where (
+      :should-be :equal
+      :actual [or true false]
+      :expected true
+    )
+  )
+  (
+    :testing :or-f-t
+    :where (
+      :should-be :equal
+      :actual [or false true]
+      :expected true
+    )
+  )
+  (
+    :testing :or-t-t
+    :where (
+      :should-be :equal
+      :actual [or true true]
+      :expected true
+    )
+  )
   (
     :testing :cons-works
     :where (

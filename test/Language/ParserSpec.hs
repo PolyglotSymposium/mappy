@@ -19,10 +19,11 @@ data ArbitraryValidKeywordName =
 
 instance Arbitrary ArbitraryValidKeywordName where
   arbitrary = do
-    let validChars = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ "_/-+<>!@#$%^&*;.?="
+    let validFirst = ['a'..'z'] ++ ['A'..'Z'] ++ "_/<>!@#$%^&*;.?="
+    let validRest = validFirst ++ "+-" ++ ['0'..'9']
     text <- arbitrary
-    firstChar <- elements validChars
-    let filtered = filter (`elem` validChars) text
+    firstChar <- elements validFirst
+    let filtered = filter (`elem` validRest) text
     return $ ValidIdentifier (firstChar:filtered)
 
 common_examples = [

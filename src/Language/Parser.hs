@@ -4,6 +4,8 @@ import Language.Ast
 import Language.Error (errorInMappy)
 import qualified Data.Map.Strict as M
 import Text.ParserCombinators.Parsec
+import Data.Char (digitToInt)
+import Control.Monad (liftM, ap)
 
 import Data.Maybe (catMaybes)
 
@@ -58,13 +60,34 @@ functionDefinition name = do
   return $ DefSugar $ SugaredFnDefinition name names expr
 
 specialForm :: Parser Expression
-specialForm = letExpression <|> list <|> character <|> string'
+specialForm = letExpression <|> list <|> character <|> string' <|> integer
 
 character :: Parser Expression
 character = ExprSugar . SugaredChar <$> (char '\'' *> characterInternal <* char '\'') <?> "character"
 
 string' :: Parser Expression
 string' = ExprSugar . SugaredString <$> (char '"' *> manyTill characterInternal (char '"')) <?> "string"
+
+integer :: Parser Expression
+integer = ExprSugar . SugaredInt <$> int <?> "integer"
+  where
+    -- https://hackage.haskell.org/package/parsec-numbers-0.1.0/docs/src/Text-ParserCombinators-Parsec-Number.html#int
+    int :: Parser Integer
+    int = ap sign nat
+    sign = (char '-' >> return negate) <|> (optional (char '+') >> return id)
+    nat = zeroNumber <|> decimal
+    zeroNumber =
+      char '0' >> (hexOrOct <|> decimal <|> return 0) <?> ""
+    decimal = number 10 digit
+    number base baseDigit = do
+      n <- liftM (numberValue base) (many1 baseDigit)
+      seq n (return n)
+    numberValue base =
+      foldl (\ x -> ((fromIntegral base * x) +) . fromIntegral . digitToInt) 0
+    hexOrOct = hexadecimal <|> octal
+    hexadecimal = oneOf "xX" >> hexnum
+    hexnum = number 16 hexDigit
+    octal = oneOf "oO" >> number 8 octDigit
 
 characterInternal :: Parser Char
 characterInternal = escapedChar <|> anyChar
