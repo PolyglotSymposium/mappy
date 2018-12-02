@@ -10,6 +10,70 @@ always-true _ = true
 
 cases = (|
   (
+    :testing :mod-for-not-contains
+    :where (
+      :should-be :equal
+      :actual [mod :b inc (:a 41)]
+      :expected (:a 41)
+    )
+  )
+  (
+    :testing :mod-for-contains
+    :where (
+      :should-be :equal
+      :actual [mod :a inc (:a 41)]
+      :expected (:a 42)
+    )
+  )
+  (
+    :testing :key-test-for-contains
+    :where (
+      :should-be :equal
+      :actual [key? :foo (:foo :bar)]
+      :expected true
+    )
+  )
+  (
+    :testing :key-test-for-not-contains
+    :where (
+      :should-be :equal
+      :actual [key? :foo (:baz :bar)]
+      :expected false
+    )
+  )
+  (
+    :testing :multiplication-works-for-zero-cases
+    :where (
+      :should-be :equal
+      :actual (| [* 0 0] [* 42 0] [* 0 42] [* 0 -42] [* -42 0] |)
+      :expected (| 0 0 0 0 0 |)
+    )
+  )
+  (
+    :testing :multiplication-works-for-same-sign-cases
+    :where (
+      :should-be :equal
+      :actual (| [* 21 2] [* -2 -5] |)
+      :expected (| 42 10 |)
+    )
+  )
+  (
+    :testing :multiplication-works-for-neutralizing-cases
+    :where (
+      :should-be :equal
+      :actual [* 0 42]
+      :expected 0
+    )
+  )
+  (
+    :testing :multiplication-works-for-different-sign-cases
+    :where (
+      :should-be :equal
+      :actual (| [* -1 4] [* 7 -2] |)
+      :expected (| -4 -14 |)
+    )
+  )
+  (
     :testing :addition-works-for-zero-cases
     :where (
       :should-be :equal
@@ -55,6 +119,38 @@ cases = (|
       :should-be :equal
       :actual (|[dec -5] [dec -1] [dec 0] [dec 1] [dec 20] [dec [dec 0]]|)
       :expected (|-6 -2 -1 0 19 -2|)
+    )
+  )
+  (
+    :testing :and-f-f
+    :where (
+      :should-be :equal
+      :actual [and false false]
+      :expected false
+    )
+  )
+  (
+    :testing :and-t-f
+    :where (
+      :should-be :equal
+      :actual [and true false]
+      :expected false
+    )
+  )
+  (
+    :testing :and-f-t
+    :where (
+      :should-be :equal
+      :actual [and false true]
+      :expected false
+    )
+  )
+  (
+    :testing :and-t-t
+    :where (
+      :should-be :equal
+      :actual [or true true]
+      :expected true
     )
   )
   (

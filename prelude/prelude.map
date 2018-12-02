@@ -11,9 +11,20 @@ false = (:truthy :false)
 
 or a (b) = [if a a [b]]
 
+and a (b) = [if a [b] false]
+
 equal? a b = [default-take a (b true) false]
 
 not v = [if v [give :truthy :false v] [give :truthy :true v]]
+
+key? k map = [not [equal? map [default-take k map map]]]
+
+mod k f map = [
+  if
+    [key? k map]
+    [give k [f [take k map]] map]
+    map
+]
 
 empty? map = [default-take map (() true) false]
 
@@ -72,6 +83,22 @@ dec v = [
     )
   ]]
 
+* a b =
+  [[
+    take
+    ([:__type a] [:__type b])
+    (
+      (:positive-int :positive-int) \ -> (:__type :positive-int :value [mult [:value a] [:value b]])
+      (:negative-int :positive-int) \ -> (:__type :negative-int :value [mult [:value a] [:value b]])
+      (:negative-int :negative-int) \ -> (:__type :positive-int :value [mult [:value a] [:value b]])
+      (:positive-int :negative-int) \ -> (:__type :negative-int :value [mult [:value a] [:value b]])
+      (:zero :positive-int)         \ -> 0
+      (:zero :negative-int)         \ -> 0
+      (:positive-int :zero)         \ -> 0
+      (:negative-int :zero)         \ -> 0
+      (:zero :zero)                 \ -> 0
+    )
+  ]]
 
 mult a b = [
   if [elem? (|a b|) zero]
