@@ -35,4 +35,5 @@ unsafeReadFile map' = unsafePerformIO $ do
   contents <- readFile $ destring $ pretty $ pluckInner map' IoReadFileSel
   return $ fromString contents
 
+destring :: [a] -> [a]
 destring = init . drop 1

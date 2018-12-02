@@ -12,7 +12,6 @@ import Language.Ast
 import Language.Desugar
 import qualified Language.Env as E
 import Language.Error
-import Language.Error.PrettyPrinter()
 import Language.Executor
 import Language.Parser
 

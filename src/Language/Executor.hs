@@ -89,7 +89,7 @@ applyNonPrim _ _ _ value = Left [NotAFunction value]
 
 evalAll :: Env -> [Expression] -> FullyEvaluated [Expression]
 evalAll env exprs = case E.partitionEithers $ map (eval env) exprs of
-  ([], values) -> Right values
+  ([], vs) -> Right vs
   (errors, _) -> Left $ concat errors
 
 assertMap :: String -> Expression -> Expression -> FullyEvaluated Expression
