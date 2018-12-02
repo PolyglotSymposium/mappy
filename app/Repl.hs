@@ -38,7 +38,7 @@ repl = do
   setSGR [Reset]
   putStrLn "\nUse Ctrl-C to quit"
   home <- getHomeDirectory
-  repl' (fst <$> validatePreExec prelude, concat [home, "/", ".mappy_history"])
+  repl' (fst <$> validatePreExec (prelude ++ [MappyDef (MappyNamedValue "main") mappyEmptyMap]), concat [home, "/", ".mappy_history"])
 
 repl' :: (Either [Error Expression] Env, FilePath) -> IO ()
 repl' (Left errors, _) = putStrLn $ show errors
