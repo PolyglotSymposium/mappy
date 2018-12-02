@@ -10,6 +10,22 @@ always-true _ = true
 
 cases = (|
   (
+    :testing :array-from-non-empty-list
+    :where (
+      :should-be :equal
+      :actual [array-from-list (| :a :b :c :d |)]
+      :expected (0 :a 1 :b 2 :c 3 :d)
+    )
+  )
+  (
+    :testing :array-from-empty-list
+    :where (
+      :should-be :equal
+      :actual [array-from-list nil]
+      :expected ()
+    )
+  )
+  (
     :testing :zip-works-for-differing-lengths
     :where (
       :should-be :equal

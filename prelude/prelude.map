@@ -415,9 +415,15 @@ set-contains? v set = [default-take v set false]
 
 set-insert v set = [give v true set]
 
-apply fn v = [fn v]
+array-from-list-aux n list = [
+  if [empty? list]
+    ()
+    [give n [:head list] [array-from-list-aux [inc n] [:tail list]]]
+]
 
-assert c = [if c :pass :fail]
+array-from-list = [array-from-list-aux 0]
+
+apply fn v = [fn v]
 
 map f xs = [
   if [empty? xs]
