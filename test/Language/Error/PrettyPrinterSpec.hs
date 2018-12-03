@@ -6,7 +6,6 @@ import qualified Data.Map.Strict as M
 
 import Language.Ast
 import Language.Error
-import Language.Error.PrettyPrinter()
 import Language.PrettyPrintable
 
 shouldFormatAs :: Error Expression -> String -> IO ()
